@@ -6009,6 +6009,16 @@ function saveProjectAssignments(obj) {
 // Returns projects the current user is allowed to see
 // Sync THIS supervisor's projects[] from assignments stored on this device
 function syncSupervisorProjects(username) {
+  // Sync routes from Firebase if available
+  if (_db) {
+    _db.collection('_config').doc('routes').get().then(doc => {
+      if (doc.exists) {
+        const routes = doc.data().routes;
+        if (routes) localStorage.setItem('aquatrack_routes', JSON.stringify(routes));
+        populateAllProjectDropdowns();
+      }
+    }).catch(()=>{});
+  }
   // Only update projects[] from assignments if this device actually has assignment data.
   // If no assignments exist (supervisor's own device), keep projects[] from Account Code untouched.
   const assignments = getProjectAssignments();
@@ -6079,6 +6089,10 @@ function getAdminRoutes() {
 }
 function saveAdminRoutes(routes) {
   localStorage.setItem('aquatrack_routes', JSON.stringify(routes));
+  // Push to Firebase so supervisors get updated routes on next login
+  if (_db) {
+    _db.collection('_config').doc('routes').set({ routes: routes, updatedAt: Date.now() }).catch(()=>{});
+  }
 }
 function buildDefaultRoutes() {
   return {};
@@ -6159,7 +6173,7 @@ function docopySyncCode(username) {
   const userRecord = getUsers()[username];
   if (!userRecord) { showToast('User not found'); return; }
 
-  const payload = { v:2, u:username, n:userRecord.name, pw:userRecord.pass, p:userRecord.projects||[], allP:getProjects(), ts:Date.now() };
+  const payload = { v:2, u:username, n:userRecord.name, pw:userRecord.pass, p:userRecord.projects||[], allP:getProjects(), allR:localStorage.getItem('aquatrack_routes')||'{}', ts:Date.now() };
   const code = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
 
   // Show in-app modal with the code — works on ALL browsers/devices including local files
@@ -6307,6 +6321,12 @@ function applySyncCode(code) {
         const merged = existingP.slice();
         payload.allP.forEach(function(p){ if (!merged.includes(p)) merged.push(p); });
         localStorage.setItem('aquatrack_projects', JSON.stringify(merged));
+      }
+      // Sync routes from Account Code — admin is source of truth
+      if (payload.allR) {
+        try {
+          localStorage.setItem('aquatrack_routes', payload.allR);
+        } catch(e) {}
       }
       users[payload.u] = {
         role:     'supervisor',
