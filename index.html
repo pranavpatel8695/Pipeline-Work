@@ -18,6 +18,7 @@
 <!-- Cambria is a system font, no import needed -->
 <!-- Leaflet map -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<!-- Firebase loaded dynamically -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
 <style>
@@ -1035,6 +1036,177 @@ self.addEventListener('fetch',e=>{if(e.request.url.includes('openstreetmap')){e.
   };
 })();
 </script>
+
+<script>
+// ========== FIREBASE CONFIG ==========
+const FB_CONFIG = {
+  apiKey:            "AIzaSyCI8qKGoqZ6Djooc7HiYVhTyQirnSupnbM",
+  authDomain:        "pipeline-work-fdd83.firebaseapp.com",
+  projectId:         "pipeline-work-fdd83",
+  storageBucket:     "pipeline-work-fdd83.firebasestorage.app",
+  messagingSenderId: "911582766677",
+  appId:             "1:911582766677:web:f8d0426e6cb2d7c4ffd6dc"
+};
+
+let _fbApp = null, _db = null, _fst = null;
+
+function fbLoadSDK() {
+  return new Promise((resolve) => {
+    if (typeof firebase !== 'undefined') { resolve(true); return; }
+    let loaded = 0;
+    const scripts = [
+      'https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.min.js',
+      'https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.min.js'
+    ];
+    scripts.forEach(src => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = () => { loaded++; if (loaded === scripts.length) resolve(true); };
+      s.onerror = () => resolve(false);
+      document.head.appendChild(s);
+    });
+  });
+}
+
+async function fbInit() {
+  if (_fbApp) return true;
+  try {
+    const loaded = await fbLoadSDK();
+    if (!loaded || typeof firebase === 'undefined') { console.warn('Firebase SDK failed to load'); return false; }
+    _fbApp = firebase.initializeApp(FB_CONFIG);
+    _db    = firebase.firestore();
+    _db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+    console.log('Firebase ready ✅');
+    return true;
+  } catch(e) { console.warn('Firebase init failed:', e); return false; }
+}
+
+// ── Save report to Firestore (Option B: photos as base64) ─────────────────
+// TO SWITCH TO STORAGE LATER: replace this function with fbSaveReportWithStorage
+async function fbSaveReport(data) {
+  const ready = await fbInit();
+  if (!ready || !_db) return false;
+  try {
+    const payload = Object.assign({}, data);
+    // Strip huge base64 photos if doc would exceed 1MB Firestore limit
+    // Compress: keep only first 2 photos per report, resize to ~200KB each
+    const photoFields = ['photos','photosStart','photosEnd'];
+    for (const field of photoFields) {
+      if (payload[field] && payload[field].length) {
+        payload[field] = await Promise.all(
+          payload[field].slice(0,3).map(p => compressBase64(p, 0.5))
+        );
+      }
+    }
+    payload.savedAt   = firebase.firestore.FieldValue.serverTimestamp();
+    payload.photoExp  = Date.now() + 30*24*60*60*1000; // 30-day expiry marker
+    await _db.collection('reports').doc(String(data.id)).set(payload);
+    return true;
+  } catch(e) { console.warn('Firestore save failed:', e); return false; }
+}
+
+// ── Compress base64 image ──────────────────────────────────────────────────
+function compressBase64(dataUrl, quality) {
+  return new Promise(resolve => {
+    if (!dataUrl || !dataUrl.startsWith('data:image')) { resolve(dataUrl); return; }
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const max = 800;
+      let w = img.width, h = img.height;
+      if (w > max) { h = Math.round(h * max/w); w = max; }
+      if (h > max) { w = Math.round(w * max/h); h = max; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality || 0.5));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+// ── Delete report from Firestore ────────────────────────────────────────────
+async function fbDeleteReport(id) {
+  const ready = await fbInit();
+  if (!ready || !_db) return;
+  try { await _db.collection('reports').doc(String(id)).delete(); } catch(e) {}
+}
+
+// ── Load all reports from Firestore ────────────────────────────────────────
+async function fbLoadReports() {
+  const ready = await fbInit();
+  if (!ready || !_db) return null;
+  try {
+    const snap = await _db.collection('reports').get();
+    return snap.docs.map(d => d.data());
+  } catch(e) { console.warn('Firestore load failed:', e); return null; }
+}
+
+// ── Sync: pull Firestore → localStorage ────────────────────────────────────
+async function fbSync() {
+  const ready = await fbInit();
+  if (!ready) { fbUpdateStatus('offline'); return; }
+  fbUpdateStatus('syncing');
+  const remote = await fbLoadReports();
+  if (!remote) { fbUpdateStatus('offline'); return; }
+  // Merge remote into local (remote wins on conflict by timestamp)
+  const local   = JSON.parse(localStorage.getItem('aquatrack_reports') || '[]');
+  const localMap = {};
+  local.forEach(r => localMap[r.id] = r);
+  remote.forEach(r => { localMap[r.id] = r; }); // remote overwrites
+  const merged = Object.values(localMap);
+  localStorage.setItem('aquatrack_reports', JSON.stringify(merged));
+  fbUpdateStatus('synced');
+  updateDashboard();
+  refreshMapPins();
+  if (typeof renderTracker === 'function') renderTracker();
+  if (typeof renderAllReports === 'function') renderAllReports();
+}
+
+// ── Status indicator ───────────────────────────────────────────────────────
+function fbUpdateStatus(state) {
+  const el = document.getElementById('fb-status');
+  if (!el) return;
+  const map = {
+    synced:  ['#30D158','☁️ Synced'],
+    syncing: ['#FF9F0A','☁️ Syncing…'],
+    offline: ['#FF453A','📵 Offline'],
+    saving:  ['#0A84FF','☁️ Saving…'],
+  };
+  const [color, text] = map[state] || ['#8E8E93','☁️'];
+  el.style.color = color;
+  el.textContent = text;
+}
+
+// ── Auto-delete reports with expired photos (30 days) ─────────────────────
+async function fbCleanExpiredPhotos() {
+  if (!fbInit()) return;
+  try {
+    const cutoff = Date.now();
+    const snap = await _db.collection('reports')
+      .where('photoExp', '<', cutoff).get();
+    const batch = _db.batch();
+    snap.docs.forEach(doc => {
+      const data = doc.data();
+      // Only strip photos, keep report data
+      const cleaned = Object.assign({}, data);
+      ['photos','photosStart','photosEnd'].forEach(f => { if (cleaned[f]) cleaned[f] = []; });
+      cleaned.photosCleared = true;
+      batch.set(doc.ref, cleaned);
+    });
+    if (!snap.empty) await batch.commit();
+  } catch(e) {}
+}
+
+// Auto-sync every 60s when online
+setInterval(() => { if (navigator.onLine) fbSync(); }, 60000);
+window.addEventListener('online', () => fbSync());
+// Clean expired photos once per day
+const _lastClean = localStorage.getItem('_fbLastClean');
+if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
+  setTimeout(() => { fbCleanExpiredPhotos(); localStorage.setItem('_fbLastClean', Date.now()); }, 5000);
+}
+</script>
 </head>
 <body>
 <div id="_installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:99999;
@@ -1132,6 +1304,7 @@ self.addEventListener('fetch',e=>{if(e.request.url.includes('openstreetmap')){e.
     <div class="topbar-right">
       <span id="connStatus" class="online-badge">Online</span>
       <div class="avatar" id="avatarEl">S</div>
+      <span id="fb-status" onclick="fbSync()" style="font-size:10px;color:#30D158;cursor:pointer;padding:3px 8px;background:rgba(48,209,88,0.1);border-radius:6px;border:1px solid rgba(48,209,88,0.2)" title="Tap to sync">☁️ Synced</span>
       <button class="logout-btn" onclick="doLogoutWithExport()">Logout</button>
     </div>
   </div>
@@ -2703,6 +2876,8 @@ function doLogoutWithExport() {
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
 function initApp() {
+  fbInit();
+  if (navigator.onLine) fbSync();
   const info = getUsers()[currentUser];
   document.getElementById('avatarEl').textContent = info.name[0];
   const badge = document.getElementById('roleBadge');
@@ -4097,18 +4272,16 @@ function submitReport(type) {
 }
 
 function doSaveReport(type, data) {
-  // Save to localStorage
   const reports = getReports();
   if (_editingReportId) {
     const idx = reports.findIndex(r => r.id === _editingReportId);
     if (idx > -1) {
       data.id = _editingReportId;
-      data.timestamp = reports[idx].timestamp; // preserve original timestamp
-      data.supervisor = reports[idx].supervisor; // preserve original supervisor
+      data.timestamp = reports[idx].timestamp;
+      data.supervisor = reports[idx].supervisor;
       reports[idx] = data;
     }
     _editingReportId = null;
-    // Reset submit button text
     document.querySelectorAll('.btn-primary.flex1[data-editing]').forEach(b => {
       b.textContent = 'Submit Report ✓'; delete b.dataset.editing;
     });
@@ -4117,13 +4290,19 @@ function doSaveReport(type, data) {
     reports.push(data);
   }
   localStorage.setItem('aquatrack_reports', JSON.stringify(reports));
-
-  showToast('✓ Report saved' + (!navigator.onLine ? ' (offline)' : ''));
+  showToast('✓ Saved locally' + (!navigator.onLine ? ' (offline)' : ''));
   cancelForm();
   updateDashboard();
   refreshMapPins();
   if (typeof renderTracker === 'function') renderTracker();
   switchTab('map');
+
+  // Save to Firebase in background
+  fbUpdateStatus('saving');
+  fbSaveReport(data).then(ok => {
+    fbUpdateStatus(ok ? 'synced' : 'offline');
+    if (ok) showToast('☁️ Synced to cloud');
+  });
 }
 
 function getReports() {
@@ -4292,6 +4471,7 @@ function reportListItem(r) {
 }
 
 function deleteReport(id) {
+  fbDeleteReport(id); // remove from Firebase too
   const reports = getReports();
   const r = reports.find(function(x) { return String(x.id) === String(id); });
   if (!r) { showToast('Report not found'); return; }
@@ -5851,32 +6031,43 @@ function getVisibleProjects() {
   const all = getProjects();
   if (currentRole === 'admin') return all;
 
-  // 1. projects[] in user record — set by Account Code
-  //    Return directly without filtering against getProjects()
-  //    because supervisor device may not have all projects in localStorage
-  const userRecord = getUsers()[currentUser];
-  if (userRecord && Array.isArray(userRecord.projects) && userRecord.projects.length > 0) {
-    // Also ensure these projects exist in localStorage so dropdowns work
-    const saved = getProjects();
-    const missing = userRecord.projects.filter(function(p) { return saved.indexOf(p) < 0; });
-    if (missing.length > 0) {
-      const merged = saved.concat(missing);
-      localStorage.setItem('aquatrack_projects', JSON.stringify(merged));
-    }
-    return userRecord.projects;
-  }
-
-  // 2. assignments in localStorage
-  const assignments = getProjectAssignments();
-  const byAssignment = all.filter(function(p) {
-    return (assignments[p] || []).indexOf(currentUser) >= 0;
-  });
-  if (byAssignment.length > 0) return byAssignment;
-
-  // 3. No assignment info — show all
-  const anyAssigned = Object.keys(assignments).some(function(p) {
+  const userRecord   = getUsers()[currentUser];
+  const assignments  = getProjectAssignments();
+  const anyAssigned  = Object.keys(assignments).some(function(p) {
     return assignments[p] && assignments[p].length > 0;
   });
+
+  // Collect from all sources and union them
+  const fromRecord     = (userRecord && Array.isArray(userRecord.projects)) ? userRecord.projects : [];
+  const fromAssignment = all.filter(function(p) {
+    return (assignments[p] || []).indexOf(currentUser) >= 0;
+  });
+
+  // Union both lists — new projects added by admin appear in 'all' + assignments
+  const union = [];
+  fromRecord.forEach(function(p)     { if (!union.includes(p)) union.push(p); });
+  fromAssignment.forEach(function(p) { if (!union.includes(p)) union.push(p); });
+
+  // Also add any projects in 'all' that weren't in the old Account Code
+  // but now exist in localStorage (admin added them after code was generated)
+  if (anyAssigned) {
+    // strict mode: only assigned
+    all.forEach(function(p) {
+      if ((assignments[p]||[]).includes(currentUser) && !union.includes(p)) union.push(p);
+    });
+  }
+
+  if (union.length > 0) {
+    // Ensure all union projects exist in localStorage for dropdowns
+    const saved   = getProjects();
+    const missing = union.filter(function(p) { return saved.indexOf(p) < 0; });
+    if (missing.length > 0) {
+      localStorage.setItem('aquatrack_projects', JSON.stringify(saved.concat(missing)));
+    }
+    return union;
+  }
+
+  // Fallback: no assignments anywhere — show all
   return anyAssigned ? [] : all;
 }
 // Live reference — always call getProjects() for current list
@@ -5968,7 +6159,7 @@ function docopySyncCode(username) {
   const userRecord = getUsers()[username];
   if (!userRecord) { showToast('User not found'); return; }
 
-  const payload = { v:2, u:username, n:userRecord.name, pw:userRecord.pass, p:userRecord.projects||[], allP:getProjects() };
+  const payload = { v:2, u:username, n:userRecord.name, pw:userRecord.pass, p:userRecord.projects||[], allP:getProjects(), ts:Date.now() };
   const code = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
 
   // Show in-app modal with the code — works on ALL browsers/devices including local files
@@ -6110,6 +6301,13 @@ function applySyncCode(code) {
 
     if (payload.v === 2) {
       // v2: full credentials included — create or update the user
+      // Merge existing projects with allP so no old data lost
+      if (payload.allP && payload.allP.length) {
+        const existingP = JSON.parse(localStorage.getItem('aquatrack_projects') || '[]');
+        const merged = existingP.slice();
+        payload.allP.forEach(function(p){ if (!merged.includes(p)) merged.push(p); });
+        localStorage.setItem('aquatrack_projects', JSON.stringify(merged));
+      }
       users[payload.u] = {
         role:     'supervisor',
         name:     payload.n  || payload.u,
@@ -6117,10 +6315,6 @@ function applySyncCode(code) {
         projects: payload.p  || []
       };
       saveUsers(users);
-      // Save project list so getProjects() returns the real projects on this device
-      if (payload.allP && payload.allP.length) {
-        localStorage.setItem('aquatrack_projects', JSON.stringify(payload.allP));
-      }
       document.getElementById('syncCodeInput').value = '';
       document.getElementById('syncCodeBox').style.display = 'none';
       document.getElementById('loginUser').value = payload.u;
@@ -6304,6 +6498,7 @@ function confirmNewProject() {
   settingsActiveProject = name;
   const routes = getAdminRoutes();
   if (!routes[name]) { routes[name] = []; saveAdminRoutes(routes); }
+  syncUserProjects();   // auto-update all supervisors' project lists
   initSettings();
   populateAllProjectDropdowns();
   showToast('Project "' + name + '" created');
