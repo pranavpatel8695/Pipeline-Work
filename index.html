@@ -4576,7 +4576,7 @@ function reportListItem(r) {
   const d = r.date || (r.timestamp||'').split('T')[0];
   const canEdit = (currentRole === 'supervisor' && r.supervisor === currentUser) || currentRole === 'admin';
   const editBtn = canEdit
-    ? `<button class="report-edit-btn" onclick="editReport(${r.id})" style="font-size:11px;padding:4px 8px;border-radius:6px;background:rgba(10,132,255,0.1);border:1px solid rgba(10,132,255,0.25);color:var(--blue);cursor:pointer;font-family:inherit">Edit</button>
+    ? `<button class="report-edit-btn" data-rid="${r.id}" style="font-size:11px;padding:4px 8px;border-radius:6px;background:rgba(10,132,255,0.1);border:1px solid rgba(10,132,255,0.25);color:var(--blue);cursor:pointer;font-family:inherit">Edit</button>
        <button class="rpt-del-btn" data-rid="${r.id}" style="font-size:11px;padding:4px 8px;border-radius:6px;background:rgba(255,69,58,0.1);border:1px solid rgba(255,69,58,0.25);color:#FF453A;cursor:pointer;font-family:inherit">Delete</button>`
     : '';
   return `<div class="report-list-item">
@@ -4616,19 +4616,28 @@ function deleteReport(id) {
 }
 
 function renderAllReports() {
-  const reports = getReports().slice().reverse();
   const container = document.getElementById('allReportsList');
+  if (!container) return;
+  const reports = getReports().slice().reverse();
   if (reports.length === 0) {
     container.innerHTML = '<div class="empty-state"><div class="es-icon">📋</div><p>No reports yet.</p></div>';
   } else {
     container.innerHTML = reports.map(function(r) { return reportListItem(r); }).join('');
   }
-  // Event delegation for delete buttons — avoids inline onclick issues
-  container.onclick = function(e) {
-    const btn = e.target.closest('.rpt-del-btn');
-    if (!btn) return;
-    deleteReport(btn.dataset.rid);
-  };
+  // Use inline onclick on delete buttons directly (most reliable)
+  container.querySelectorAll('.rpt-del-btn').forEach(function(btn) {
+    btn.onclick = function(e) {
+      e.stopPropagation();
+      deleteReport(btn.dataset.rid);
+    };
+  });
+  // Also keep edit buttons working
+  container.querySelectorAll('.report-edit-btn').forEach(function(btn) {
+    btn.onclick = function(e) {
+      e.stopPropagation();
+      editReport(btn.dataset.rid);
+    };
+  });
 }
 
 // ========== CANVAS MAP ==========
