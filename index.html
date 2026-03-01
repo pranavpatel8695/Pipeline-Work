@@ -1149,11 +1149,17 @@ async function fbSync() {
   fbUpdateStatus('syncing');
   const remote = await fbLoadReports();
   if (!remote) { fbUpdateStatus('offline'); return; }
-  // Merge remote into local (remote wins on conflict by timestamp)
-  const local   = JSON.parse(localStorage.getItem('aquatrack_reports') || '[]');
+  // Get locally deleted IDs so we don't restore them
+  const deletedIds = JSON.parse(localStorage.getItem('aquatrack_deleted_ids') || '[]');
+  const deletedSet = new Set(deletedIds.map(String));
+  const local = JSON.parse(localStorage.getItem('aquatrack_reports') || '[]');
   const localMap = {};
-  local.forEach(r => localMap[r.id] = r);
-  remote.forEach(r => { localMap[r.id] = r; }); // remote overwrites
+  local.forEach(r => localMap[String(r.id)] = r);
+  // Remote adds new/updated, but skip any locally deleted
+  remote.forEach(r => {
+    const sid = String(r.id);
+    if (!deletedSet.has(sid)) localMap[sid] = r;
+  });
   const merged = Object.values(localMap);
   localStorage.setItem('aquatrack_reports', JSON.stringify(merged));
   fbUpdateStatus('synced');
@@ -3193,8 +3199,28 @@ function editReport(id) {
   const reports = getReports();
   const r = reports.find(r => r.id == id || String(r.id) === String(id));
   if (!r) return;
-  _editingReportId = id;
 
+  // Dependency warning for edit
+  const depMsg = getEditDeleteDepMsg(r, 'edit');
+  if (depMsg) {
+    showConfirmModal(
+      '⚠️ Dependency Warning',
+      depMsg,
+      function() { _doEditReport(id); }
+    );
+    // Change confirm button label to "Edit Anyway"
+    const yesBtn = document.getElementById('_cmYes');
+    if (yesBtn) yesBtn.textContent = 'Edit Anyway';
+  } else {
+    _doEditReport(id);
+  }
+}
+
+function _doEditReport(id) {
+  const reports = getReports();
+  const r = reports.find(r => r.id == id || String(r.id) === String(id));
+  if (!r) return;
+  _editingReportId = id;
   switchTab('submit');
   selectForm(r.type);
 
@@ -4412,6 +4438,34 @@ function doSaveReport(type, data) {
   });
 }
 
+// ── Dependency message for edit/delete ─────────────────────────────────────
+function getEditDeleteDepMsg(r, action) {
+  const type = r.type;
+  const reports = getReports();
+  // If editing/deleting excavation — check if pipe exists in same range
+  if (type === 'excavation') {
+    const dependents = reports.filter(function(x) {
+      return x.project === r.project && x.route === r.route && x.type === 'pipe'
+        && x.from < r.to && x.to > r.from;
+    });
+    if (dependents.length) {
+      const act = action==='delete'?'Deleting':'Editing';
+      return 'Pipe Laying (' + dependents.length + ' record(s)) depends on this Excavation. ' + act + ' may break workflow. Overlap: ' + dependents.map(function(x){ return x.from+'m-'+x.to+'m'; }).join(', ');
+    }
+  }
+  if (type === 'pipe') {
+    const dependents = reports.filter(function(x) {
+      return x.project === r.project && x.route === r.route && x.type === 'refill'
+        && x.from < r.to && x.to > r.from;
+    });
+    if (dependents.length) {
+      const act = action==='delete'?'Deleting':'Editing';
+      return 'Refilling (' + dependents.length + ' record(s)) depends on this Pipe Laying. ' + act + ' may break workflow. Overlap: ' + dependents.map(function(x){ return x.from+'m-'+x.to+'m'; }).join(', ');
+    }
+  }
+  return null;
+}
+
 function getReports() {
   return JSON.parse(localStorage.getItem('aquatrack_reports') || '[]');
 }
@@ -4575,11 +4629,12 @@ function reportListItem(r) {
   }
   const d = r.date || (r.timestamp||'').split('T')[0];
   const canEdit = (currentRole === 'supervisor' && r.supervisor === currentUser) || currentRole === 'admin';
-  const allPhotos = [...(r.photosStart||[]), ...(r.photosEnd||[]), ...(r.photos||[])].filter(Boolean);
-  const photoCount = allPhotos.length;
+  const _allP = [];
+  ['photosStart','photosEnd','photos'].forEach(function(k){ (r[k]||[]).forEach(function(p){ if(p && p.length>10) _allP.push({src:p,label:k}); }); });
+  const photoCount = _allP.length;
   const photoBtn = photoCount
     ? `<button onclick="viewReportPhotos('${r.id}')" style="font-size:11px;padding:4px 8px;border-radius:6px;background:rgba(191,90,242,0.1);border:1px solid rgba(191,90,242,0.25);color:#BF5AF2;cursor:pointer;font-family:inherit;margin-right:4px">📷 ${photoCount}</button>`
-    : '';
+    : (currentRole==='admin' ? `<span style="font-size:10px;color:var(--muted);margin-right:4px">No photos</span>` : '');
   const editBtn = canEdit
     ? `<button onclick="editReport('${r.id}')" style="font-size:11px;padding:4px 8px;border-radius:6px;background:rgba(10,132,255,0.1);border:1px solid rgba(10,132,255,0.25);color:var(--blue);cursor:pointer;font-family:inherit;margin-right:4px">Edit</button><button onclick="deleteReport('${r.id}')" style="font-size:11px;padding:4px 8px;border-radius:6px;background:rgba(255,69,58,0.1);border:1px solid rgba(255,69,58,0.25);color:#FF453A;cursor:pointer;font-family:inherit">Delete</button>`
     : '';
@@ -4644,22 +4699,26 @@ function deleteReport(id) {
   if (!r) { showToast('Report not found'); return; }
   const canDelete = (currentRole === 'supervisor' && r.supervisor === currentUser) || currentRole === 'admin';
   if (!canDelete) { showToast('You can only delete your own reports'); return; }
+  const depWarn = getEditDeleteDepMsg(r, 'delete');
+  const delMsg = 'Delete this ' + (r.type||'') + ' report dated ' + (r.date||'') + '? Cannot be undone.' + (depWarn ? ' Warning: ' + depWarn : '');
   showConfirmModal(
-    'Delete Report',
-    'Delete this ' + (r.type || '') + ' report dated ' + (r.date || '') + '? Cannot be undone.',
+    depWarn ? '⚠️ Dependency Warning' : 'Delete Report',
+    delMsg,
     function() {
       var updated = getReports().filter(function(x) { return String(x.id) !== String(id); });
       localStorage.setItem('aquatrack_reports', JSON.stringify(updated));
+      // Track deleted ID so fbSync doesn't restore it
+      var delIds = JSON.parse(localStorage.getItem('aquatrack_deleted_ids') || '[]');
+      if (!delIds.includes(String(id))) delIds.push(String(id));
+      localStorage.setItem('aquatrack_deleted_ids', JSON.stringify(delIds));
       updateDashboard();
       renderAllReports();
       refreshMapPins();
       if (typeof renderTracker === 'function') renderTracker();
-      showToast('🗑️ Deleted locally');
-      // Sync deletion to Firebase
+      showToast('🗑️ Deleted');
       fbUpdateStatus('saving');
       fbDeleteReport(id).then(function(ok) {
         fbUpdateStatus(ok ? 'synced' : 'offline');
-        if (ok) showToast('☁️ Deletion synced to cloud');
       });
     }
   );
