@@ -4804,25 +4804,35 @@ function _drawAdminRoutes(proj) {
     return;
   }
   console.log('[Map] Drawing', adminRoutes.length, 'routes for', proj);
-  // Draw schematic lines radiating from center
-  const center = [22.818, 70.813];
-  adminRoutes.forEach((route, i) => {
-    const spread = 0.006;
-    const ang = (i / Math.max(adminRoutes.length, 1)) * Math.PI * 1.5 - 0.5;
-    const startLL = [center[0] + Math.cos(ang) * spread,     center[1] + Math.sin(ang) * spread];
-    const endLL   = [center[0] + Math.cos(ang+0.3)*spread*2, center[1] + Math.sin(ang+0.3)*spread*2];
+  // Get center from existing GPS pins, else use map center
+  const allPins = getReports().filter(function(r){ return r.lat && r.lon && r.project === proj; });
+  let center;
+  if (allPins.length) {
+    const avgLat = allPins.reduce(function(s,r){ return s+r.lat; }, 0) / allPins.length;
+    const avgLon = allPins.reduce(function(s,r){ return s+r.lon; }, 0) / allPins.length;
+    center = [avgLat, avgLon];
+  } else {
+    const mc = _lmap.getCenter();
+    center = [mc.lat, mc.lng];
+  }
+  const spread = 0.003;
+  adminRoutes.forEach(function(route, i) {
+    const ang = (i / Math.max(adminRoutes.length, 1)) * Math.PI * 2;
+    const startLL = [center[0] + Math.cos(ang)*spread*0.3, center[1] + Math.sin(ang)*spread*0.3];
+    const endLL   = [center[0] + Math.cos(ang)*spread,     center[1] + Math.sin(ang)*spread];
     const pl = L.polyline([startLL, endLL], {
       color: route.color || '#0A84FF',
-      weight: 3,
-      opacity: 0.6,
-      dashArray: '10 6'
+      weight: 5,
+      opacity: 0.85
     }).addTo(_lRouteLayer);
-    pl.bindTooltip(route.name, { permanent: false, direction: 'top', className: 'leaflet-tooltip' });
-    pl.on('click', () => {
-      const meta = `${route.length ? (route.length >= 1000 ? (route.length/1000).toFixed(2)+'km' : route.length+'m') : 'Length not set'} · ${route.pipe || 'No pipe spec'}`;
+    pl.bindTooltip(route.name + (route.length ? ' ('+route.length+'m)' : ''), { permanent: true, direction: 'center', className: 'leaflet-tooltip' });
+    pl.on('click', function() {
+      const meta = (route.length ? (route.length>=1000?(route.length/1000).toFixed(2)+'km':route.length+'m') : 'Length not set') + ' · ' + (route.pipe || 'No pipe spec');
       showRoutePopup(route.name, route, meta, proj);
     });
   });
+  // Fit map to show the routes
+  try { _lmap.fitBounds(_lRouteLayer.getBounds().pad(0.5)); } catch(e) { _lmap.setView(center, 14); }
 }
 
 // ── Chainage segment colours (same as pin colours) ──────────────────────────
@@ -6408,7 +6418,14 @@ function renderSupervisorAccounts() {
 
   el.innerHTML = supervisors.map(function(username, i) {
     const u = users[username];
-    const projList = (u.projects && u.projects.length) ? u.projects.join(', ') : 'None assigned';
+    const assignments = getProjectAssignments();
+    const allProjects = getProjects();
+    const assignedProjs = allProjects.filter(function(p) {
+      return (assignments[p] || []).indexOf(username) >= 0;
+    });
+    // Fallback to u.projects if assignments not set
+    const projList = assignedProjs.length ? assignedProjs.join(', ') :
+      (u.projects && u.projects.length ? u.projects.join(', ') : 'None assigned');
     return [
       '<div style="border-radius:10px;border:1px solid var(--border);background:var(--surface2);margin-bottom:10px;overflow:hidden">',
         '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px">',
