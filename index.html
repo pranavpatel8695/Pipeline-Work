@@ -1125,6 +1125,37 @@ function compressBase64(dataUrl, quality) {
   });
 }
 
+// Compress to target size (default 50KB)
+function compressToTargetSize(dataUrl, targetKB) {
+  targetKB = targetKB || 50;
+  return new Promise(function(resolve) {
+    if (!dataUrl || !dataUrl.startsWith('data:image')) { resolve(dataUrl); return; }
+    const img = new Image();
+    img.onload = function() {
+      let w = img.width, h = img.height;
+      // Scale down dimensions first
+      const maxDim = 640;
+      if (w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; }
+      if (h > maxDim) { w = Math.round(w * maxDim / h); h = maxDim; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      // Binary search for quality that hits target
+      let lo = 0.05, hi = 0.7, result = canvas.toDataURL('image/jpeg', 0.3);
+      for (let i = 0; i < 8; i++) {
+        const mid = (lo + hi) / 2;
+        const attempt = canvas.toDataURL('image/jpeg', mid);
+        const kb = Math.round(attempt.length * 0.75 / 1024);
+        if (kb <= targetKB) { lo = mid; result = attempt; }
+        else hi = mid;
+      }
+      resolve(result);
+    };
+    img.onerror = function() { resolve(dataUrl); };
+    img.src = dataUrl;
+  });
+}
+
 // ── Delete report from Firestore ────────────────────────────────────────────
 async function fbDeleteReport(id) {
   const ready = await fbInit();
@@ -1149,18 +1180,44 @@ async function fbSync() {
   fbUpdateStatus('syncing');
   const remote = await fbLoadReports();
   if (!remote) { fbUpdateStatus('offline'); return; }
-  // Get locally deleted IDs so we don't restore them
+
   const deletedIds = JSON.parse(localStorage.getItem('aquatrack_deleted_ids') || '[]');
   const deletedSet = new Set(deletedIds.map(String));
   const local = JSON.parse(localStorage.getItem('aquatrack_reports') || '[]');
-  const localMap = {};
-  local.forEach(r => localMap[String(r.id)] = r);
-  // Remote adds new/updated, but skip any locally deleted
-  remote.forEach(r => {
+
+  // Build remote map (skip deleted)
+  const remoteMap = {};
+  remote.forEach(function(r) {
     const sid = String(r.id);
-    if (!deletedSet.has(sid)) localMap[sid] = r;
+    if (!deletedSet.has(sid)) remoteMap[sid] = r;
   });
-  const merged = Object.values(localMap);
+
+  // Push local-only reports to Firebase (reports submitted offline)
+  const uploadPromises = [];
+  local.forEach(function(r) {
+    const sid = String(r.id);
+    if (!deletedSet.has(sid) && !remoteMap[sid]) {
+      uploadPromises.push(fbSaveReport(r));
+    }
+  });
+  if (uploadPromises.length) await Promise.all(uploadPromises);
+
+  // Merge: local wins if newer timestamp, else remote wins
+  const mergedMap = {};
+  local.forEach(function(r) {
+    if (!deletedSet.has(String(r.id))) mergedMap[String(r.id)] = r;
+  });
+  remote.forEach(function(r) {
+    const sid = String(r.id);
+    if (deletedSet.has(sid)) return;
+    const loc = mergedMap[sid];
+    // Remote wins if it has a newer savedAt or local doesn't exist
+    if (!loc || (r.savedAt && loc.savedAt && r.savedAt > loc.savedAt)) {
+      mergedMap[sid] = r;
+    }
+  });
+
+  const merged = Object.values(mergedMap);
   localStorage.setItem('aquatrack_reports', JSON.stringify(merged));
   fbUpdateStatus('synced');
   updateDashboard();
@@ -4006,26 +4063,33 @@ function previewPhotosGPS(input, previewId, latId, lonId) {
   const dateStr = now.toLocaleDateString('en-IN', { day:'2-digit', month:'2-digit', year:'numeric' });
   const timeStr = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
 
-  Array.from(input.files).forEach(file => {
+  Array.from(input.files).forEach(function(file) {
     const reader = new FileReader();
-    reader.onload = e => {
-      const wrap = document.createElement('div');
-      wrap.className = 'photo-preview-wrap';
-
-      const img = document.createElement('img');
-      img.className = 'photo-preview';
-      img.src = e.target.result;
-
-      const tag = document.createElement('div');
-      tag.className = 'photo-gps-tag';
-      tag.innerHTML = `📍 ${lat}° ${lon}°<br>📅 ${dateStr} ${timeStr}`;
-
-      wrap.appendChild(img);
-      wrap.appendChild(tag);
-      prev.appendChild(wrap);
+    reader.onload = function(e) {
+      compressToTargetSize(e.target.result, 50).then(function(compressed) {
+        const wrap = document.createElement('div');
+        wrap.className = 'photo-preview-wrap';
+        const img = document.createElement('img');
+        img.className = 'photo-preview';
+        img.src = compressed;
+        const kb = Math.round(compressed.length * 0.75 / 1024);
+        const tag = document.createElement('div');
+        tag.className = 'photo-gps-tag';
+        tag.innerHTML = '📍 ' + lat + '° ' + lon + '°<br>📅 ' + dateStr + ' ' + timeStr + '<br>📦 ' + kb + 'KB';
+        wrap.appendChild(img);
+        wrap.appendChild(tag);
+        prev.appendChild(wrap);
+      });
     };
     reader.readAsDataURL(file);
   });
+}
+
+// Collect compressed photos from a preview div
+function collectPhotosFromPreview(previewId) {
+  const prev = document.getElementById(previewId);
+  if (!prev) return [];
+  return Array.from(prev.querySelectorAll('img.photo-preview')).map(function(i){ return i.src; }).filter(Boolean);
 }
 
 // ========== SUBMIT REPORT ==========
@@ -4078,7 +4142,9 @@ function submitReport(type) {
     data.lon      = parseFloat(document.getElementById('exc-lon').value) || null;
     data.lat2     = parseFloat(document.getElementById('exc-lat2').value) || null;
     data.lon2     = parseFloat(document.getElementById('exc-lon2').value) || null;
-    data.remarks  = document.getElementById('exc-remarks').value;
+    data.remarks     = document.getElementById('exc-remarks').value;
+    data.photosStart = collectPhotosFromPreview('exc-photo-prev-start');
+    data.photosEnd   = collectPhotosFromPreview('exc-photo-prev-end');
 
     // ── Mandatory field validation (supervisors only) ──────────────────────
     if (currentRole === 'supervisor') {
@@ -4157,7 +4223,9 @@ function submitReport(type) {
     data.encasing     = firstEnc ? firstEnc.type : 'Not Required';
     data.encasingFrom = firstEnc ? firstEnc.from : null;
     data.encasingTo   = firstEnc ? firstEnc.to   : null;
-    data.remarks      = document.getElementById('pipe-remarks').value;
+    data.remarks     = document.getElementById('pipe-remarks').value;
+    data.photosStart = collectPhotosFromPreview('pipe-photo-prev-start');
+    data.photosEnd   = collectPhotosFromPreview('pipe-photo-prev-end');
 
     // ── Mandatory field validation (supervisors only) ──────────────────────
     if (currentRole === 'supervisor') {
@@ -4306,7 +4374,8 @@ function submitReport(type) {
     data.lat      = parseFloat(document.getElementById('val-lat').value) || null;
     data.lon      = parseFloat(document.getElementById('val-lon').value) || null;
     data.chamberReq = document.getElementById('val-chamber-req').value || '—';
-    data.remarks  = document.getElementById('val-remarks').value;
+    data.remarks = document.getElementById('val-remarks').value;
+    data.photos  = collectPhotosFromPreview('val-photo-prev');
 
   } else if (type === 'chamber') {
     const chamProj  = document.getElementById('cham-project').value;
@@ -4585,22 +4654,20 @@ function reportListItem(r) {
   try {
     switch(r.type) {
       case 'excavation':
-        t = { label:'Excavation',    cls:'excavation', icon:'⛏️',
-              info: (r.meters||0)+'m · '+(r.soil||'')+(r.width?' · W:'+r.width+'m':'')+(r.depth?' · D:'+r.depth+'m':'') };
+        t = { label:'Excavation', cls:'excavation', icon:'⛏️',
+              info: 'Ch:'+(r.from||0)+'-'+(r.to||0)+'m · '+(r.meters||0)+'m · '+(r.soil||'')+(r.width?' W:'+r.width+'m':'')+(r.depth?' D:'+r.depth+'m':'') };
         break;
       case 'pipe':
         t = { label:'Pipe Laying', cls:'pipe', icon:'🔩',
-              info: (r.meters||0)+'m · '+(r.size||'')+(r.material?' '+r.material:'') };
+              info: 'Ch:'+(r.from||0)+'-'+(r.to||0)+'m · '+(r.meters||0)+'m · '+(r.size||'')+(r.material?' '+r.material:'') };
         break;
       case 'refill':
-        t = { label:'Refilling',     cls:'refill',     icon:'🪣',
-              info: (r.meters||0)+'m · Road: '+(r.road||'—') };
+        t = { label:'Refilling', cls:'refill', icon:'🪣',
+              info: 'Ch:'+(r.from||0)+'-'+(r.to||0)+'m · '+(r.meters||0)+'m · Road:'+(r.road||'-') };
         break;
       case 'valve':
-        t = { label:'Valves',        cls:'valve',      icon:'🔧',
-              info: (r.valves&&r.valves.length
-                ? r.valves.map(v=>(v.qty>1?v.qty+'× ':'')+v.valType+(v.size?' '+v.size:'')).join(', ')
-                : (r.valType||''))+(r.chainage?' · Ch:'+r.chainage+'m':'') };
+        t = { label:'Valves', cls:'valve', icon:'🔧',
+              info: (r.chainage?'Ch:'+r.chainage+'m · ':'')+( r.valves&&r.valves.length?r.valves.map(function(v){return (v.qty>1?v.qty+'x ':'')+v.valType+(v.size?' '+v.size:'');}).join(', '):(r.valType||'')) };
         break;
       case 'chamber':
         t = { label: r.chamType||'Chamber', cls:'chamber', icon:'🏛️',
