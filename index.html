@@ -6391,6 +6391,7 @@ function renderProjectTabs() {
 window._supCopy   = [];
 window._supDelete = [];
 window._supShare  = [];
+window._supEdit   = [];
 
 function renderSupervisorAccounts() {
   const el = document.getElementById('supervisorAccountList');
@@ -6407,9 +6408,11 @@ function renderSupervisorAccounts() {
   window._supCopy   = [];
   window._supDelete = [];
   window._supShare  = [];
+  window._supEdit   = [];
   supervisors.forEach(function(username) {
     window._supCopy.push(function()   { docopySyncCode(username);    });
     window._supDelete.push(function() { dodeleteSupervisor(username); });
+    window._supEdit.push((function(u) { return function() { showEditSupervisorModal(u); }; })(username));
     window._supShare.push((function(u, rec) { return function() {
       var msg = '👷 Pipeline Work Login%0AUsername: ' + u + '%0APassword: ' + rec.pass + '%0A%0AOpen app and sign in with these credentials.';
       window.open('https://wa.me/?text=' + msg, '_blank');
@@ -6450,6 +6453,7 @@ function renderSupervisorAccounts() {
           + '<div style="font-size:11px;color:var(--muted);margin-top:1px">@' + username + ' &nbsp;·&nbsp; Pass: <b style="color:#30D158">' + u.pass + '</b></div>'
           + '<div style="font-size:10px;color:var(--muted);margin-top:2px">📁 ' + projList + '</div>'
         + '</div>'
+        + '<button onclick="window._supEdit[' + i + ']()" style="background:rgba(255,159,10,0.12);border:1px solid rgba(255,159,10,0.4);border-radius:8px;padding:6px 10px;color:#FF9F0A;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;flex-shrink:0;margin-right:6px">✏️</button>'
         + '<button onclick="window._supShare[' + i + ']()" style="background:rgba(48,209,88,0.12);border:1px solid rgba(48,209,88,0.4);border-radius:8px;padding:6px 10px;color:#30D158;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;flex-shrink:0;margin-right:6px">📤</button>'
         + '<button onclick="window._supDelete[' + i + ']()" style="background:rgba(255,69,58,0.12);border:1px solid rgba(255,69,58,0.4);border-radius:8px;padding:6px 10px;color:#FF453A;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;flex-shrink:0">🗑️</button>'
       + '</div>'
@@ -6704,6 +6708,53 @@ function confirmAddSupervisor() {
   renderSupervisorAccounts();
   renderSupervisorAssign();
   showToast('✅ ' + name + ' added — can now login on any device');
+}
+
+function showEditSupervisorModal(username) {
+  const users = getUsers();
+  const u = users[username];
+  if (!u) return;
+  var existing = document.getElementById('_editSupModal');
+  if (existing) existing.remove();
+  // Store username on window for saveEditSupervisor
+  window._editSupUser = username;
+  var modal = document.createElement('div');
+  modal.id = '_editSupModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:24px;width:100%;max-width:340px';
+  box.innerHTML = '<div style="font-size:16px;font-weight:700;margin-bottom:4px">✏️ Edit Supervisor</div>'
+    + '<div style="font-size:12px;color:var(--muted);margin-bottom:14px">@' + username + '</div>'
+    + '<div class="field-group" style="margin-bottom:12px"><label>Full Name</label>'
+    + '<input type="text" id="_editSupName" placeholder="Full name"></div>'
+    + '<div class="field-group" style="margin-bottom:16px"><label>New Password <span style="color:var(--muted);font-size:11px">(blank = keep current)</span></label>'
+    + '<input type="text" id="_editSupPass" placeholder="New password" autocomplete="new-password"></div>'
+    + '<div style="display:flex;gap:10px">'
+    + '<button id="_editSupCancel" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">Cancel</button>'
+    + '<button id="_editSupSave" style="flex:1;padding:12px;border-radius:10px;border:none;background:#FF9F0A;color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">Save</button>'
+    + '</div>';
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+  document.getElementById('_editSupName').value = u.name;
+  document.getElementById('_editSupCancel').onclick = function() { modal.remove(); };
+  document.getElementById('_editSupSave').onclick = function() { saveEditSupervisor(); };
+  document.getElementById('_editSupName').focus();
+}
+
+function saveEditSupervisor() {
+  const username = window._editSupUser;
+  const newName = document.getElementById('_editSupName').value.trim();
+  const newPass = document.getElementById('_editSupPass').value.trim();
+  if (!newName) { showToast('❌ Name cannot be empty'); return; }
+  const users = getUsers();
+  if (!users[username]) return;
+  users[username].name = newName;
+  if (newPass) users[username].pass = newPass;
+  saveUsers(users);
+  fbPushAdminData();
+  document.getElementById('_editSupModal').remove();
+  renderSupervisorAccounts();
+  showToast('✅ ' + newName + ' updated — new credentials pushed to Firebase');
 }
 
 function toggleSupAssignProject(username, project) {
