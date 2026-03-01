@@ -393,115 +393,76 @@
 
   /* ---- DASHBOARD ---- */
   /* ── Dashboard ── */
+  /* ── Date banner ── */
   .dash-date-banner {
-    background: linear-gradient(135deg, rgba(10,132,255,0.12) 0%, rgba(18,18,20,1) 60%);
-    border: 1px solid rgba(10,132,255,0.2);
+    background: linear-gradient(135deg, rgba(10,132,255,0.15) 0%, rgba(18,18,20,1) 70%);
+    border: 1px solid rgba(10,132,255,0.25);
     border-radius: 18px;
     padding: 16px 18px;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-  .dash-date-text { font-size: 13px; color: var(--muted); }
-  .dash-date-day  { font-size: 20px; font-weight: 700; color: var(--text); font-family: 'Cambria', serif; margin-top: 2px; }
+  .dash-date-text { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .dash-date-day  { font-size: 17px; font-weight: 700; color: var(--text); font-family: 'Cambria', serif; margin-top: 3px; }
 
+  /* ── Section labels ── */
   .dash-section-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin: 20px 0 8px 2px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+    text-transform: uppercase; color: var(--muted);
+    margin: 18px 0 8px 2px;
+    display: flex; align-items: center; gap: 6px;
   }
-  .dash-section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-    margin-left: 4px;
-  }
+  .dash-section-label::after { content:''; flex:1; height:1px; background:var(--border); }
 
-  .activity-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    margin-bottom: 6px;
+  /* ── Stat cards (today + cumulative) ── */
+  .dash-stat-card {
+    border-radius: 14px; padding: 13px 14px;
+    display: flex; align-items: center; gap: 12px;
+    border: 1px solid transparent; transition: transform 0.15s;
   }
-  .activity-card {
-    border-radius: 16px;
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid transparent;
-    transition: transform 0.15s;
-  }
-  .activity-card:active { transform: scale(0.97); }
-  .activity-card .ac-icon {
-    font-size: 22px;
-    line-height: 1;
-    margin-bottom: 2px;
-  }
-  .activity-card .ac-value {
-    font-family: 'Cambria', Georgia, serif;
-    font-size: 24px;
-    font-weight: 800;
-    line-height: 1;
-  }
-  .activity-card .ac-label {
-    font-size: 11px;
-    font-weight: 600;
-    opacity: 0.8;
-    margin-top: 1px;
-  }
-  .activity-card .ac-sub {
-    font-size: 10px;
-    opacity: 0.6;
-  }
-  .ac-excavation  { background: rgba(255,159,10,0.12); border-color: rgba(255,159,10,0.2); color: #FF9F0A; }
-  .ac-pipe        { background: rgba(10,132,255,0.12); border-color: rgba(10,132,255,0.2); color: #0A84FF; }
-  .ac-refill      { background: rgba(48,209,88,0.12);  border-color: rgba(48,209,88,0.2);  color: #30D158; }
-  .ac-valve       { background: rgba(255,69,58,0.12);  border-color: rgba(255,69,58,0.2);  color: #FF453A; }
-  .ac-chamber     { background: rgba(255,149,0,0.12);  border-color: rgba(255,149,0,0.2);  color: #FF9500; }
-  .ac-concrete    { background: rgba(191,90,242,0.12); border-color: rgba(191,90,242,0.2); color: #BF5AF2; }
+  .dash-stat-card:active { transform: scale(0.97); }
+  .dsc-icon  { font-size: 26px; flex-shrink: 0; line-height: 1; }
+  .dsc-value { font-family: 'Cambria', Georgia, serif; font-size: 22px; font-weight: 800; line-height: 1; }
+  .dsc-label { font-size: 10px; font-weight: 600; opacity: 0.75; margin-top: 2px; }
+  .dsc-sub   { font-size: 9px; opacity: 0.55; margin-top: 1px; }
+  .dsc-exc  { background:rgba(255,159,10,0.12); border-color:rgba(255,159,10,0.22); color:#FF9F0A; }
+  .dsc-pipe { background:rgba(10,132,255,0.12); border-color:rgba(10,132,255,0.22); color:#0A84FF; }
+  .dsc-ref  { background:rgba(48,209,88,0.12);  border-color:rgba(48,209,88,0.22);  color:#30D158; }
+  .dsc-val  { background:rgba(255,69,58,0.12);  border-color:rgba(255,69,58,0.22);  color:#FF453A; }
+  .dsc-cham { background:rgba(255,149,0,0.12);  border-color:rgba(255,149,0,0.22);  color:#FF9500; }
+  .dsc-str  { background:rgba(191,90,242,0.12); border-color:rgba(191,90,242,0.22); color:#BF5AF2; }
+  .dsc-fit  { background:rgba(90,200,250,0.12); border-color:rgba(90,200,250,0.22); color:#5AC8FA; }
 
-  .dash-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 6px; }
-  .mini-stat {
-    background: var(--surface);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 14px;
-    padding: 12px 14px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  /* ── Report count chips ── */
+  .dash-count-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .dash-count-chip {
+    text-align:center; padding:10px 4px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:12px;
   }
-  .mini-stat-icon { font-size: 20px; flex-shrink: 0; }
-  .mini-stat-val  { font-size: 18px; font-weight: 800; font-family: 'Cambria', serif; color: var(--text); line-height: 1; }
-  .mini-stat-lbl  { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .dcc-icon  { font-size:18px; }
+  .dcc-val   { font-size:16px; font-weight:800; color:var(--text); line-height:1.2; font-family:'Cambria',serif; }
+  .dcc-lbl   { font-size:9px; color:var(--muted); margin-top:2px; }
 
-  .progress-item { margin-bottom: 16px; }
-  .progress-item:last-child { margin-bottom: 0; }
-  .progress-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; align-items: center; }
-  .progress-header span:first-child { font-weight: 600; color: var(--text); }
-  .progress-header span:last-child  { color: var(--muted); font-size: 11px; }
-  .progress-bar {
-    height: 8px;
-    background: var(--surface2);
-    border-radius: 6px;
-    overflow: hidden;
+  /* ── Progress bars ── */
+  .progress-item { margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+  .progress-item:last-child { margin-bottom:0; padding-bottom:0; border-bottom:none; }
+  .progress-header { display:flex; justify-content:space-between; font-size:12px; margin-bottom:8px; align-items:center; }
+  .progress-bar { height:7px; background:var(--surface2); border-radius:6px; overflow:hidden; margin-bottom:2px; }
+  .progress-fill { height:100%; border-radius:6px; background:var(--blue); transition:width 0.9s cubic-bezier(.4,0,.2,1); }
+
+  /* ── Export section ── */
+  .dash-export-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+  .dash-export-btn {
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    padding:14px 8px; border-radius:14px; cursor:pointer; font-family:inherit;
+    border:1px solid var(--border); background:var(--surface); color:var(--text);
+    font-size:12px; font-weight:600; transition:all 0.15s;
   }
-  .progress-fill {
-    height: 100%;
-    border-radius: 6px;
-    background: var(--blue);
-    transition: width 0.9s cubic-bezier(.4,0,.2,1);
-  }
+  .dash-export-btn:active { transform:scale(0.96); }
+  .dash-export-btn .deb-icon { font-size:24px; }
 
   /* ── Report list ── */
   .report-list-item {
@@ -1363,147 +1324,74 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
     <!-- ===== DASHBOARD TAB ===== -->
     <div id="tab-dashboard">
 
-      <!-- Date banner -->
+      <!-- ── Header: date + project filter ── -->
       <div class="dash-date-banner">
         <div>
           <div class="dash-date-text">Today</div>
           <div class="dash-date-day" id="dashDateLabel">—</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:3px">Project</div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.6px">Project</div>
           <select id="dashProjectFilter" onchange="updateDashboard()"
-            style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:600;padding:4px 8px;font-family:inherit;max-width:140px">
+            style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:600;padding:5px 9px;font-family:inherit;max-width:160px">
             <option value="">All Projects</option>
           </select>
         </div>
       </div>
 
-      <!-- Today's activity -->
+      <!-- ① TODAY'S ACTIVITY — all 7 forms -->
       <div class="dash-section-label">📅 Today's Activity</div>
-      <div class="activity-grid">
-        <div class="activity-card ac-excavation">
-          <div class="ac-icon">⛏️</div>
-          <div class="ac-value" id="dayExc">0m</div>
-          <div class="ac-label">Excavation</div>
-        </div>
-        <div class="activity-card ac-pipe">
-          <div class="ac-icon">🔩</div>
-          <div class="ac-value" id="dayPipe">0m</div>
-          <div class="ac-label">Pipe Laying</div>
-        </div>
-        <div class="activity-card ac-refill">
-          <div class="ac-icon">🪣</div>
-          <div class="ac-value" id="dayRefill">0m</div>
-          <div class="ac-label">Refilling</div>
-        </div>
-        <div class="activity-card ac-valve">
-          <div class="ac-icon">🔧</div>
-          <div class="ac-value" id="dayValve">0</div>
-          <div class="ac-label">Valves</div>
-        </div>
-        <div class="activity-card ac-chamber">
-          <div class="ac-icon">🏛️</div>
-          <div class="ac-value" id="dayCham">0</div>
-          <div class="ac-label">Chambers</div>
-        </div>
-        <div class="activity-card ac-concrete">
-          <div class="ac-icon">🏗️</div>
-          <div class="ac-value" id="dayStr">0</div>
-          <div class="ac-label">Concrete Work</div>
-        </div>
-      </div>
+      <div id="dashTodayGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px"></div>
 
-      <!-- Cumulative totals -->
+      <!-- ② CUMULATIVE TOTALS — all 7 forms -->
       <div class="dash-section-label">📊 Cumulative Totals</div>
-      <div class="activity-grid" style="margin-bottom:4px">
-        <div class="activity-card ac-excavation">
-          <div class="ac-icon">⛏️</div>
-          <div class="ac-value" id="statExcavation">0m</div>
-          <div class="ac-label">Excavated</div>
-        </div>
-        <div class="activity-card ac-pipe">
-          <div class="ac-icon">🔩</div>
-          <div class="ac-value" id="statPipe">0m</div>
-          <div class="ac-label">Pipe Laid</div>
-        </div>
-        <div class="activity-card ac-refill">
-          <div class="ac-icon">🪣</div>
-          <div class="ac-value" id="statRefill">0m</div>
-          <div class="ac-label">Refilled</div>
-        </div>
+      <div id="dashCumGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px"></div>
 
-      </div>
-      <div class="dash-two-col" style="margin-bottom:14px">
-        <div class="mini-stat">
-          <div class="mini-stat-icon">🔧</div>
-          <div>
-            <div class="mini-stat-val" id="statValve">0</div>
-            <div class="mini-stat-lbl">Valves Installed</div>
-          </div>
-        </div>
-        <div class="mini-stat">
-          <div class="mini-stat-icon">🏛️</div>
-          <div>
-            <div class="mini-stat-val" id="statCham">0</div>
-            <div class="mini-stat-lbl">Chambers Built</div>
-          </div>
-        </div>
-        <div class="mini-stat">
-          <div class="mini-stat-icon">🏗️</div>
-          <div>
-            <div class="mini-stat-val" id="statStr">0</div>
-            <div class="mini-stat-lbl">Concrete Works</div>
-          </div>
-        </div>
-        <div class="mini-stat">
-          <div class="mini-stat-icon">📋</div>
-          <div>
-            <div class="mini-stat-val" id="statTotal">0</div>
-            <div class="mini-stat-lbl">Total Reports</div>
-          </div>
-        </div>
+      <!-- ③ TOTAL REPORTS by form type -->
+      <div class="dash-section-label">📋 Total Reports</div>
+      <div class="card" style="padding:14px;margin-bottom:4px">
+        <div id="dashReportCount" class="dash-count-grid"></div>
       </div>
 
-      <!-- Project Progress -->
+      <!-- ④ PROJECT PROGRESS -->
       <div class="dash-section-label">📍 Project Progress</div>
-      <div class="card" style="padding:14px 16px">
+      <div class="card" style="padding:16px;margin-bottom:4px">
         <div id="progressBars"><div style="font-size:12px;color:var(--muted)">No projects yet</div></div>
       </div>
 
-      <!-- Recent Reports -->
+      <!-- ⑤ RECENT ACTIVITY -->
       <div class="dash-section-label">🕐 Recent Activity</div>
-      <div class="card" style="padding:0 16px">
+      <div class="card" style="padding:0 16px;margin-bottom:4px">
         <div id="recentReports">
-          <div class="empty-state">
-            <div class="es-icon">📋</div>
-            <p>No reports yet. Submit your first report!</p>
-          </div>
+          <div class="empty-state"><div class="es-icon">📋</div><p>No reports yet.</p></div>
         </div>
       </div>
 
-      <!-- Export (admin only) -->
-      <div class="admin-only card">
-        <div class="card-title">⬇️ Export Data</div>
-        <div class="export-row">
-          <button class="btn-export" onclick="exportKMZ()">
-            <span class="exp-icon">🌍</span>KMZ Export
-          </button>
-          <button class="btn-export" onclick="exportJSON()">
-            <span class="exp-icon">📄</span>JSON Export
-          </button>
-          <button class="btn-export" onclick="clearData()">
-            <span class="exp-icon">🗑️</span>Clear All
-          </button>
-        </div>
-        <!-- PDF Export -->
-        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">PDF Reports</div>
-          <div class="export-row">
-            <button class="btn-export" onclick="showPdfExportModal()">
-              <span class="exp-icon">📑</span>Daily Report
+      <!-- ⑥ EXPORT DATA (admin only) -->
+      <div class="admin-only">
+        <div class="dash-section-label">⬇️ Export Data</div>
+        <div class="card" style="padding:16px;margin-bottom:4px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px">Raw Data</div>
+          <div class="dash-export-grid">
+            <button class="dash-export-btn" onclick="exportKMZ()">
+              <span class="deb-icon">🌍</span>KMZ Export
             </button>
-            <button class="btn-export" onclick="exportPDF('overall')">
-              <span class="exp-icon">📊</span>Full Project Report
+            <button class="dash-export-btn" onclick="exportJSON()">
+              <span class="deb-icon">📄</span>JSON Export
+            </button>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin:14px 0 10px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px">PDF Reports</div>
+          <div class="dash-export-grid">
+            <button class="dash-export-btn" onclick="showPdfExportModal()">
+              <span class="deb-icon">📑</span>Daily Report
+            </button>
+            <button class="dash-export-btn" onclick="exportPDF('overall')">
+              <span class="deb-icon">📊</span>Full Project Report
+            </button>
+          </div>
+          <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+            <button class="dash-export-btn" onclick="clearData()" style="width:100%;flex-direction:row;gap:10px;background:rgba(255,69,58,0.07);border-color:rgba(255,69,58,0.25);color:#FF453A">
+              <span style="font-size:18px">🗑️</span>Clear All Local Data
             </button>
           </div>
         </div>
@@ -4707,111 +4595,181 @@ function getReports() {
 }
 // ========== DASHBOARD ==========
 function updateDashboard() {
-  // Populate project filter dropdown (admin only)
-  const filterEl = document.getElementById('dashProjectFilter');
+  // ── Project dropdown ──────────────────────────────────────────────────────
+  var filterEl = document.getElementById('dashProjectFilter');
   if (filterEl) {
-    const projects = getVisibleProjects();
-    const current = filterEl.value;
-    filterEl.innerHTML = '<option value="">All Projects</option>' +
-      projects.map(p => `<option value="${p}" ${p===current?'selected':''}>${p}</option>`).join('');
-    filterEl.style.display = ''; // show for all roles
+    var vp = getVisibleProjects(), cur = filterEl.value;
+    filterEl.innerHTML = '<option value="">All Projects</option>'
+      + vp.map(function(p){ return '<option value="'+p+'"'+(p===cur?' selected':'')+'>'+p+'</option>'; }).join('');
   }
-  const selectedProject = filterEl ? filterEl.value : '';
+  var selProj = filterEl ? filterEl.value : '';
 
-  const reports = getReports();
-  const visibleProjects = getVisibleProjects();
-  let visible = (currentRole === 'admin'
-    ? reports
-    : reports.filter(r => r.supervisor === currentUser))
-    .filter(r => visibleProjects.indexOf(r.project) >= 0);
+  // ── Date label ────────────────────────────────────────────────────────────
+  var dateEl = document.getElementById('dashDateLabel');
+  if (dateEl) {
+    var dn = new Date();
+    dateEl.textContent = dn.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  }
 
-  // Filter by selected project if chosen
-  if (selectedProject) visible = visible.filter(r => r.project === selectedProject);
+  // ── Collect visible reports ───────────────────────────────────────────────
+  var all = getReports();
+  var vis = all.filter(function(r){ return getVisibleProjects().indexOf(r.project) >= 0; });
+  if (currentRole === 'supervisor') vis = vis.filter(function(r){ return r.supervisor === currentUser; });
+  if (selProj) vis = vis.filter(function(r){ return r.project === selProj; });
 
-  const today = new Date().toISOString().slice(0, 10);
-  let excM=0, pipeM=0, refM=0, valC=0, strC=0, chamC=0, fitC=0, dayFit=0;
-  let dayExc=0, dayPipe=0, dayRefill=0, dayVal=0, dayStr=0, dayCham=0;
+  var today = new Date().toISOString().slice(0,10);
 
-  visible.forEach(r => {
-    const isToday = (r.date === today) || (r.timestamp && r.timestamp.startsWith(today));
-    if (r.type === 'excavation') { excM  += r.meters||0; if(isToday) dayExc  += r.meters||0; }
-    if (r.type === 'pipe')       { pipeM += r.meters||0; if(isToday) dayPipe += r.meters||0; }
-    if (r.type === 'refill')     { refM  += r.meters||0; if(isToday) dayRefill += r.meters||0; }
-    if (r.type === 'valve')      { valC++;   if(isToday) dayVal++; }
-    if (r.type === 'structure')  { strC++;   if(isToday) dayStr++; }
-    if (r.type === 'fitting')    { fitC++; if(isToday) dayFit++; }
-    if (r.type === 'chamber')    { chamC++;  if(isToday) dayCham++; }
+  // ── Accumulate stats ─────────────────────────────────────────────────────
+  var s = {
+    excM:0,excR:0, pipeM:0,pipeR:0, refM:0,refR:0,
+    valC:0, chamC:0, strC:0, fitC:0,
+    dExcM:0,dExcR:0, dPipeM:0,dPipeR:0, dRefM:0,dRefR:0,
+    dValC:0, dChamC:0, dStrC:0, dFitC:0
+  };
+  vis.forEach(function(r) {
+    var td = r.date === today;
+    switch(r.type) {
+      case 'excavation':
+        s.excM+=r.meters||0; s.excR++;
+        if(td){s.dExcM+=r.meters||0; s.dExcR++;} break;
+      case 'pipe':
+        s.pipeM+=r.meters||0; s.pipeR++;
+        if(td){s.dPipeM+=r.meters||0; s.dPipeR++;} break;
+      case 'refill':
+        s.refM+=r.meters||0; s.refR++;
+        if(td){s.dRefM+=r.meters||0; s.dRefR++;} break;
+      case 'valve':
+        s.valC++; if(td) s.dValC++; break;
+      case 'chamber':
+        s.chamC++; if(td) s.dChamC++; break;
+      case 'structure':
+        s.strC++; if(td) s.dStrC++; break;
+      case 'fitting':
+        s.fitC++; if(td) s.dFitC++; break;
+    }
   });
 
-  const fmt = m => m >= 1000 ? (m/1000).toFixed(1)+'km' : m+'m';
+  function fmtM(m){ return m>=1000?(m/1000).toFixed(2)+'km':m+'m'; }
 
-  // Date banner
-  const dateEl = document.getElementById('dashDateLabel');
-  if (dateEl) {
-    const d = new Date();
-    dateEl.textContent = d.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'short' });
-  }
-  const subEl = document.getElementById('dashSub');
-  if (subEl) subEl.textContent = selectedProject || 'All Projects';
-
-  // Today
-  const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
-  set('dayExc',    fmt(dayExc));
-  set('dayPipe',   fmt(dayPipe));
-  set('dayRefill', fmt(dayRefill));
-  set('dayValve',  dayVal);
-  set('dayStr',    dayStr);
-  set('dayCham',   dayCham);
-
-  // Cumulative
-  set('statExcavation', fmt(excM));
-  set('statPipe',       fmt(pipeM));
-  set('statRefill',     fmt(refM));
-  set('statValve',      valC);
-  set('statStr',        strC);
-  set('statCham',       chamC);
-  set('statTotal',      visible.length);
-
-  // Project progress bars — dynamic
-  const projects = selectedProject ? [selectedProject] : getVisibleProjects();
-  const progCard = document.getElementById('progressBars');
-  if (progCard) {
-    progCard.innerHTML = projects.map((p, i) => {
-      const pRoutes = getAdminRoutes()[p] || [];
-      const totalTarget = pRoutes.reduce((s,r) => s + (r.length||0), 0) || 10000;
-      const pPipe = visible.filter(r => r.project===p && r.type==='pipe').reduce((s,r)=>s+(r.meters||0),0);
-      const pct = Math.min(100, Math.round(pPipe/totalTarget*100));
-      const colors = ['var(--blue)','var(--green)','var(--yellow)','#BF5AF2','#FF9F0A'];
-      const pExc = visible.filter(r=>r.project===p&&r.type==='excavation').reduce((s,r)=>s+(r.meters||0),0);
-      const pRef = visible.filter(r=>r.project===p&&r.type==='refill').reduce((s,r)=>s+(r.meters||0),0);
-      const pVal = visible.filter(r=>r.project===p&&r.type==='valve').length;
-      const fmtM = m => m >= 1000 ? (m/1000).toFixed(1)+'km' : m+'m';
-      return `<div class="progress-item">
-        <div class="progress-header">
-          <span>${p}</span>
-          <span style="display:flex;align-items:center;gap:4px">
-            <span style="color:${colors[i%colors.length]};font-weight:700">${pct}%</span>
-            <span style="color:var(--muted)">pipe</span>
-          </span>
-        </div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${colors[i%colors.length]}"></div></div>
-        <div style="display:flex;gap:14px;margin-top:6px;font-size:10px;color:var(--muted)">
-          <span>⛏️ ${fmtM(pExc)} exc</span>
-          <span>🔩 ${fmtM(pPipe)} pipe</span>
-          <span>🪣 ${fmtM(pRef)} refill</span>
-          <span>🔧 ${pVal} valves</span>
-        </div>
-      </div>`;
-    }).join('');
+  // ── Stat card builder ─────────────────────────────────────────────────────
+  function sCard(cls,icon,label,val,sub) {
+    return '<div class="dash-stat-card dsc-'+cls+'">'
+      +'<div class="dsc-icon">'+icon+'</div>'
+      +'<div>'
+      +'<div class="dsc-label">'+label+'</div>'
+      +'<div class="dsc-value">'+val+'</div>'
+      +'<div class="dsc-sub">'+sub+'</div>'
+      +'</div></div>';
   }
 
-  // Recent
-  const recent = visible.slice().reverse().slice(0, 8);
-  const container = document.getElementById('recentReports');
-  if (recent.length === 0) {
-    container.innerHTML = `<div class="empty-state"><div class="es-icon">📋</div><p>No reports yet.</p></div>`;
-  } else {
-    container.innerHTML = recent.map(r => reportListItem(r)).join('');
+  // ── ① TODAY ──────────────────────────────────────────────────────────────
+  var tg = document.getElementById('dashTodayGrid');
+  if (tg) tg.innerHTML = [
+    sCard('exc','⛏️','Excavation', fmtM(s.dExcM), s.dExcR+' report'+(s.dExcR!==1?'s':'')),
+    sCard('pipe','🔩','Pipe Laying', fmtM(s.dPipeM), s.dPipeR+' report'+(s.dPipeR!==1?'s':'')),
+    sCard('ref','🪣','Refilling', fmtM(s.dRefM), s.dRefR+' report'+(s.dRefR!==1?'s':'')),
+    sCard('val','🔧','Valves', s.dValC+' nos.', s.dValC+' report'+(s.dValC!==1?'s':'')),
+    sCard('cham','🏛️','Chambers', s.dChamC+' nos.', s.dChamC+' report'+(s.dChamC!==1?'s':'')),
+    sCard('str','🏗️','Concrete Work', s.dStrC+' nos.', s.dStrC+' report'+(s.dStrC!==1?'s':'')),
+    sCard('fit','🔗','Fittings', s.dFitC+' nos.', s.dFitC+' report'+(s.dFitC!==1?'s':''))
+  ].join('');
+
+  // ── ② CUMULATIVE ─────────────────────────────────────────────────────────
+  var cg = document.getElementById('dashCumGrid');
+  if (cg) cg.innerHTML = [
+    sCard('exc','⛏️','Total Excavation', fmtM(s.excM), s.excR+' report'+(s.excR!==1?'s':'')),
+    sCard('pipe','🔩','Total Pipe Laid', fmtM(s.pipeM), s.pipeR+' report'+(s.pipeR!==1?'s':'')),
+    sCard('ref','🪣','Total Refilling', fmtM(s.refM), s.refR+' report'+(s.refR!==1?'s':'')),
+    sCard('val','🔧','Total Valves', s.valC+' nos.', s.valC+' report'+(s.valC!==1?'s':'')),
+    sCard('cham','🏛️','Total Chambers', s.chamC+' nos.', s.chamC+' report'+(s.chamC!==1?'s':'')),
+    sCard('str','🏗️','Total Concrete Works', s.strC+' nos.', s.strC+' report'+(s.strC!==1?'s':'')),
+    sCard('fit','🔗','Total Fittings', s.fitC+' nos.', s.fitC+' report'+(s.fitC!==1?'s':''))
+  ].join('');
+
+  // ── ③ REPORT COUNT ────────────────────────────────────────────────────────
+  var rc = document.getElementById('dashReportCount');
+  if (rc) {
+    function chip(icon,lbl,n) {
+      return '<div class="dash-count-chip">'
+        +'<div class="dcc-icon">'+icon+'</div>'
+        +'<div class="dcc-val">'+n+'</div>'
+        +'<div class="dcc-lbl">'+lbl+'</div>'
+        +'</div>';
+    }
+    rc.innerHTML = [
+      chip('📋','Total',vis.length),
+      chip('⛏️','Excavation',s.excR),
+      chip('🔩','Pipe',s.pipeR),
+      chip('🪣','Refill',s.refR),
+      chip('🔧','Valves',s.valC),
+      chip('🏛️','Chambers',s.chamC),
+      chip('🏗️','Concrete',s.strC),
+      chip('🔗','Fittings',s.fitC)
+    ].join('');
+  }
+
+  // ── ④ PROJECT PROGRESS ────────────────────────────────────────────────────
+  var projects = selProj ? [selProj] : getVisibleProjects();
+  var pb = document.getElementById('progressBars');
+  if (pb) {
+    if (!projects.length) {
+      pb.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0">No projects yet</div>';
+    } else {
+      var pcols = ['#0A84FF','#30D158','#FF9F0A','#BF5AF2','#FF453A','#5AC8FA','#FF6B35'];
+      pb.innerHTML = projects.map(function(p,i) {
+        var rts  = getAdminRoutes()[p]||[];
+        var tgt  = rts.reduce(function(a,r){return a+(r.length||0);},0)||10000;
+        var pr   = vis.filter(function(r){return r.project===p;});
+        var pExc = pr.filter(function(r){return r.type==='excavation';}).reduce(function(a,r){return a+(r.meters||0);},0);
+        var pPipe= pr.filter(function(r){return r.type==='pipe';}).reduce(function(a,r){return a+(r.meters||0);},0);
+        var pRef = pr.filter(function(r){return r.type==='refill';}).reduce(function(a,r){return a+(r.meters||0);},0);
+        var pVal = pr.filter(function(r){return r.type==='valve';}).length;
+        var pCh  = pr.filter(function(r){return r.type==='chamber';}).length;
+        var pSt  = pr.filter(function(r){return r.type==='structure';}).length;
+        var pFt  = pr.filter(function(r){return r.type==='fitting';}).length;
+        var ep   = Math.min(100,Math.round(pExc/tgt*100));
+        var pp   = Math.min(100,Math.round(pPipe/tgt*100));
+        var rp   = Math.min(100,Math.round(pRef/tgt*100));
+        var c    = pcols[i%pcols.length];
+        return '<div class="progress-item">'
+          +'<div class="progress-header">'
+          +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+p+'</span>'
+          +'<span style="font-size:11px;color:'+c+';font-weight:700">'+pp+'% pipe laid</span>'
+          +'</div>'
+          +'<div style="margin-bottom:8px">'
+          +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px"><span>⛏️ Excavation</span><span>'+fmtM(pExc)+' / '+fmtM(tgt)+' ('+ep+'%)</span></div>'
+          +'<div class="progress-bar"><div class="progress-fill" style="width:'+ep+'%;background:#FF9F0A"></div></div>'
+          +'</div>'
+          +'<div style="margin-bottom:8px">'
+          +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px"><span>🔩 Pipe Laying</span><span>'+fmtM(pPipe)+' / '+fmtM(tgt)+' ('+pp+'%)</span></div>'
+          +'<div class="progress-bar"><div class="progress-fill" style="width:'+pp+'%;background:#0A84FF"></div></div>'
+          +'</div>'
+          +'<div style="margin-bottom:10px">'
+          +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px"><span>🪣 Refilling</span><span>'+fmtM(pRef)+' / '+fmtM(tgt)+' ('+rp+'%)</span></div>'
+          +'<div class="progress-bar"><div class="progress-fill" style="width:'+rp+'%;background:#30D158"></div></div>'
+          +'</div>'
+          +'<div style="display:flex;flex-wrap:wrap;gap:6px">'
+          +'<span style="font-size:10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--muted)">🔧 '+pVal+' valves</span>'
+          +'<span style="font-size:10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--muted)">🏛️ '+pCh+' chambers</span>'
+          +'<span style="font-size:10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--muted)">🏗️ '+pSt+' concrete</span>'
+          +'<span style="font-size:10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--muted)">🔗 '+pFt+' fittings</span>'
+          +'</div>'
+          +'</div>';
+      }).join('');
+    }
+  }
+
+  // ── ⑤ RECENT ACTIVITY (last 10, newest first) ────────────────────────────
+  var recent = vis.slice().sort(function(a,b){
+    var da=a.date||'', db=b.date||'';
+    if(db!==da) return db>da?1:-1;
+    return (b.timestamp||b.id||0)>(a.timestamp||a.id||0)?1:-1;
+  }).slice(0,10);
+  var rcont = document.getElementById('recentReports');
+  if (rcont) {
+    rcont.innerHTML = recent.length
+      ? recent.map(function(r){return reportListItem(r);}).join('')
+      : '<div class="empty-state"><div class="es-icon">📋</div><p>No reports yet. Submit your first report!</p></div>';
   }
 }
 
