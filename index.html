@@ -1505,15 +1505,7 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
           <label>Excavation Quantity (m³) <span style="color:var(--muted);font-size:11px">— auto calculated</span></label>
           <input type="number" id="exc-volume" placeholder="L × W × D" readonly style="opacity:0.7">
         </div>
-        <!-- Starting Point -->
-        <div class="field-group">
-          <label>📍 Starting Point GPS <span style="color:#FF453A">*</span></label>
-          <div class="gps-row">
-            <div class="field-group"><input type="text" id="exc-lat" placeholder="Latitude"></div>
-            <div class="field-group"><input type="text" id="exc-lon" placeholder="Longitude"></div>
-            <button class="gps-btn" onclick="getGPS('exc-lat','exc-lon')">📍</button>
-          </div>
-        </div>
+        <input type="hidden" id="exc-lat"><input type="hidden" id="exc-lon">
         <div class="field-group">
           <label>Starting Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 2</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('exc-photos-start').click()">
@@ -1523,16 +1515,7 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
           </div>
           <div class="photo-previews" id="exc-photo-prev-start"></div>
         </div>
-
-        <!-- Ending Point -->
-        <div class="field-group">
-          <label>🏁 Ending Point GPS <span style="color:#FF453A">*</span></label>
-          <div class="gps-row">
-            <div class="field-group"><input type="text" id="exc-lat2" placeholder="Latitude"></div>
-            <div class="field-group"><input type="text" id="exc-lon2" placeholder="Longitude"></div>
-            <button class="gps-btn" onclick="getGPS('exc-lat2','exc-lon2')">📍</button>
-          </div>
-        </div>
+        <input type="hidden" id="exc-lat2"><input type="hidden" id="exc-lon2">
         <div class="field-group">
           <label>Ending Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 2</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('exc-photos-end').click()">
@@ -1595,15 +1578,7 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
           <input type="number" id="pipe-meters" placeholder="Auto-calculated" readonly style="opacity:0.7">
           <span id="pipe-meters-badge" style="display:none;font-size:11px;font-weight:700;color:#30D158;background:rgba(48,209,88,0.1);border:1px solid rgba(48,209,88,0.3);border-radius:6px;padding:3px 8px;margin-top:4px"></span>
         </div>
-        <!-- Starting Point -->
-        <div class="field-group">
-          <label>📍 Starting Point GPS <span style="color:#FF453A">*</span></label>
-          <div class="gps-row">
-            <div class="field-group"><input type="text" id="pipe-lat" placeholder="Latitude"></div>
-            <div class="field-group"><input type="text" id="pipe-lon" placeholder="Longitude"></div>
-            <button class="gps-btn" onclick="getGPS('pipe-lat','pipe-lon')">📍</button>
-          </div>
-        </div>
+<input type="hidden" id="pipe-lat"><input type="hidden" id="pipe-lon">
         <div class="field-group">
           <label>Starting Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 2</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('pipe-photos-start').click()">
@@ -1613,16 +1588,7 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
           </div>
           <div class="photo-previews" id="pipe-photo-prev-start"></div>
         </div>
-
-        <!-- Ending Point -->
-        <div class="field-group">
-          <label>🏁 Ending Point GPS <span style="color:#FF453A">*</span></label>
-          <div class="gps-row">
-            <div class="field-group"><input type="text" id="pipe-lat2" placeholder="Latitude"></div>
-            <div class="field-group"><input type="text" id="pipe-lon2" placeholder="Longitude"></div>
-            <button class="gps-btn" onclick="getGPS('pipe-lat2','pipe-lon2')">📍</button>
-          </div>
-        </div>
+<input type="hidden" id="pipe-lat2"><input type="hidden" id="pipe-lon2">
         <div class="field-group">
           <label>Ending Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 2</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('pipe-photos-end').click()">
@@ -1726,15 +1692,7 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
             <option>In Progress</option><option>Completed</option>
           </select>
         </div>
-        <!-- Starting Point -->
-        <div class="field-group">
-          <label>📍 Starting Point GPS <span style="color:#FF453A">*</span></label>
-          <div class="gps-row">
-            <div class="field-group"><input type="text" id="ref-lat" placeholder="Latitude"></div>
-            <div class="field-group"><input type="text" id="ref-lon" placeholder="Longitude"></div>
-            <button class="gps-btn" onclick="getGPS('ref-lat','ref-lon')">📍</button>
-          </div>
-        </div>
+<input type="hidden" id="ref-lat"><input type="hidden" id="ref-lon">
         <div class="field-group">
           <label>Starting Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 2</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('ref-photos-start').click()">
@@ -1744,15 +1702,7 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
           </div>
           <div class="photo-previews" id="ref-photo-prev-start"></div>
         </div>
-        <!-- Ending Point -->
-        <div class="field-group">
-          <label>🏁 Ending Point GPS <span style="color:#FF453A">*</span></label>
-          <div class="gps-row">
-            <div class="field-group"><input type="text" id="ref-lat2" placeholder="Latitude"></div>
-            <div class="field-group"><input type="text" id="ref-lon2" placeholder="Longitude"></div>
-            <button class="gps-btn" onclick="getGPS('ref-lat2','ref-lon2')">📍</button>
-          </div>
-        </div>
+<input type="hidden" id="ref-lat2"><input type="hidden" id="ref-lon2">
         <div class="field-group">
           <label>Ending Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 2</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('ref-photos-end').click()">
@@ -1805,14 +1755,7 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
           </button>
         </div>
 
-        <div class="field-group">
-          <label>GPS Location</label>
-          <div class="gps-row">
-            <div class="field-group"><input type="text" id="val-lat" placeholder="Latitude"></div>
-            <div class="field-group"><input type="text" id="val-lon" placeholder="Longitude"></div>
-            <button class="gps-btn" onclick="getGPS('val-lat','val-lon')">📍</button>
-          </div>
-        </div>
+        <input type="hidden" id="val-lat"><input type="hidden" id="val-lon">
         <div class="field-group">
           <label>Photos</label>
           <div class="photo-input-wrap" onclick="document.getElementById('val-photos').click()">
@@ -1922,16 +1865,7 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
             </div>
           </div>
         </div>
-
-        <!-- GPS + Photo -->
-        <div class="field-group">
-          <label>GPS Location</label>
-          <div class="gps-row">
-            <div class="field-group"><input type="text" id="cham-lat" placeholder="Latitude"></div>
-            <div class="field-group"><input type="text" id="cham-lon" placeholder="Longitude"></div>
-            <button class="gps-btn" onclick="getGPS('cham-lat','cham-lon')">📍</button>
-          </div>
-        </div>
+        <input type="hidden" id="cham-lat"><input type="hidden" id="cham-lon">
         <div class="field-group">
           <label>Photos</label>
           <div class="photo-input-wrap" onclick="document.getElementById('cham-photos').click()">
@@ -2109,16 +2043,7 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
             <div id="str-conc-diff" style="display:none;font-size:11px;font-weight:600;padding:7px 10px;background:var(--surface);border-radius:8px"></div>
           </div>
         </div>
-
-        <!-- GPS -->
-        <div class="field-group">
-          <label>GPS Location</label>
-          <div class="gps-row">
-            <div class="field-group" style="margin-bottom:0"><input type="text" id="str-lat" placeholder="Latitude"></div>
-            <div class="field-group" style="margin-bottom:0"><input type="text" id="str-lon" placeholder="Longitude"></div>
-            <button class="gps-btn" onclick="getGPS('str-lat','str-lon')">📍</button>
-          </div>
-        </div>
+<input type="hidden" id="str-lat"><input type="hidden" id="str-lon">
 
         <!-- Photos -->
         <div class="field-group">
@@ -2205,14 +2130,7 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
           </div>
           <input type="hidden" id="fit-thrust" value="">
         </div>
-        <div class="field-group">
-          <label>GPS Location</label>
-          <div style="display:flex;gap:8px;align-items:center">
-            <div class="field-group" style="flex:1;margin-bottom:0"><input type="text" id="fit-lat" placeholder="Latitude"></div>
-            <div class="field-group" style="flex:1;margin-bottom:0"><input type="text" id="fit-lon" placeholder="Longitude"></div>
-            <button class="gps-btn" onclick="getGPS('fit-lat','fit-lon')">📍</button>
-          </div>
-        </div>
+<input type="hidden" id="fit-lat"><input type="hidden" id="fit-lon">
         <div class="field-group">
           <label>Photos</label>
           <div class="photo-input-wrap" onclick="document.getElementById('fit-photos').click()">
@@ -2368,22 +2286,6 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
 
       <!-- Project selector -->
       <div class="project-tab-row" id="settingsProjTabs"></div>
-
-      <!-- KMZ Upload -->
-      <div class="card">
-        <div class="card-title">🌍 KMZ / KML Background Map</div>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Upload your survey KMZ file. The planned pipeline routes will appear on the map as reference lines. Supervisors see planned vs actual progress.</p>
-        <div class="kmz-upload-zone" id="kmzDropZone" onclick="document.getElementById('kmzFileInput').click()"
-             ondragover="event.preventDefault();this.classList.add('drag')"
-             ondragleave="this.classList.remove('drag')"
-             ondrop="handleKmzDrop(event)">
-          <div class="kmz-icon">🗂️</div>
-          <h3>Tap to upload KMZ or KML file</h3>
-          <p>Your survey/as-built file — routes appear on map automatically</p>
-          <input type="file" id="kmzFileInput" accept=".kmz,.kml" onchange="handleKmzFile(this.files[0])">
-        </div>
-        <div id="kmzStatus"></div>
-      </div>
 
       <!-- Route Management -->
       <div class="card">
@@ -4025,39 +3927,59 @@ function getGPS(latId, lonId) {
 function previewPhotosGPS(input, previewId, latId, lonId) {
   const prev = document.getElementById(previewId);
   prev.innerHTML = '';
-  const lat = document.getElementById(latId).value || lastGPS.lat || '—';
-  const lon = document.getElementById(lonId).value || lastGPS.lon || '—';
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-IN', { day:'2-digit', month:'2-digit', year:'numeric' });
   const timeStr = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
 
-  Array.from(input.files).forEach(function(file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      compressToTargetSize(e.target.result, 50).then(function(compressed) {
-        const wrap = document.createElement('div');
-        wrap.className = 'photo-preview-wrap';
-        const img = document.createElement('img');
-        img.className = 'photo-preview';
-        img.src = compressed;
-        const kb = Math.round(compressed.length * 0.75 / 1024);
-        const tag = document.createElement('div');
-        tag.className = 'photo-gps-tag';
-        tag.innerHTML = '📍 ' + lat + '° ' + lon + '°<br>📅 ' + dateStr + ' ' + timeStr + '<br>📦 ' + kb + 'KB';
-        wrap.appendChild(img);
-        wrap.appendChild(tag);
-        prev.appendChild(wrap);
-      });
-    };
-    reader.readAsDataURL(file);
-  });
+  // Auto-capture GPS silently when photo is taken
+  function doProcess(lat, lon) {
+    // Store in hidden fields
+    var latEl = document.getElementById(latId);
+    var lonEl = document.getElementById(lonId);
+    if (latEl && !latEl.value) latEl.value = lat;
+    if (lonEl && !lonEl.value) lonEl.value = lon;
+    Array.from(input.files).forEach(function(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        compressToTargetSize(e.target.result, 50).then(function(compressed) {
+          const wrap = document.createElement('div');
+          wrap.className = 'photo-preview-wrap';
+          const img = document.createElement('img');
+          img.className = 'photo-preview';
+          img.src = compressed;
+          // Store lat/lon on img for collection
+          img.dataset.lat = lat;
+          img.dataset.lon = lon;
+          const kb = Math.round(compressed.length * 0.75 / 1024);
+          const tag = document.createElement('div');
+          tag.className = 'photo-gps-tag';
+          tag.innerHTML = (lat !== '—' ? '📍 ' + lat + ', ' + lon + '<br>' : '') +
+            '📅 ' + dateStr + ' ' + timeStr + '<br>📦 ' + kb + 'KB';
+          wrap.appendChild(img); wrap.appendChild(tag); prev.appendChild(wrap);
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(pos) { doProcess(pos.coords.latitude.toFixed(6), pos.coords.longitude.toFixed(6)); },
+      function()    { doProcess(lastGPS.lat || '—', lastGPS.lon || '—'); },
+      { timeout: 5000, maximumAge: 30000 }
+    );
+  } else {
+    doProcess(lastGPS.lat || '—', lastGPS.lon || '—');
+  }
 }
 
-// Collect compressed photos from a preview div
+// Collect compressed photos (with embedded GPS) from preview div
 function collectPhotosFromPreview(previewId) {
-  const prev = document.getElementById(previewId);
+  var prev = document.getElementById(previewId);
   if (!prev) return [];
-  return Array.from(prev.querySelectorAll('img.photo-preview')).map(function(i){ return i.src; }).filter(Boolean);
+  return Array.from(prev.querySelectorAll('img.photo-preview')).map(function(img) {
+    return { src: img.src, lat: img.dataset.lat||null, lon: img.dataset.lon||null };
+  }).filter(function(p){ return p.src; });
 }
 
 // ========== SUBMIT REPORT ==========
@@ -4862,8 +4784,11 @@ function reportListItem(r) {
   const d = r.date || (r.timestamp||'').split('T')[0];
   const canEdit = currentRole === 'admin';
   const _allP = [];
-  ['photosStart','photosEnd','photos'].forEach(function(k){ (r[k]||[]).forEach(function(p){ if(p && p.length>10) _allP.push({src:p,label:k}); }); });
+  ['photosStart','photosEnd','photos'].forEach(function(k){ (r[k]||[]).forEach(function(p){ if(p && (p.src||p).length>10) _allP.push({src:p.src||p, lat:p.lat||null, lon:p.lon||null, label:k}); }); });
   const photoCount = _allP.length;
+  // GPS from first photo with coords
+  const firstGPS = _allP.find(function(p){ return p.lat && p.lat !== '—'; });
+  const gpsStr = firstGPS ? '📍 ' + firstGPS.lat + ', ' + firstGPS.lon : '';
   const photoBtn = photoCount
     ? `<button onclick="viewReportPhotos('${r.id}')" style="font-size:11px;padding:4px 8px;border-radius:6px;background:rgba(191,90,242,0.1);border:1px solid rgba(191,90,242,0.25);color:#BF5AF2;cursor:pointer;font-family:inherit;margin-right:4px">📷 ${photoCount}</button>`
     : (currentRole==='admin' ? `<span style="font-size:10px;color:var(--muted);margin-right:4px">No photos</span>` : '');
@@ -4879,6 +4804,7 @@ function reportListItem(r) {
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
       <div style="font-size:10px;color:var(--muted)">${d}</div>
       <div style="font-size:10px;color:var(--muted)">${r.supervisor||''}</div>
+      ${gpsStr ? '<div style="font-size:9px;color:var(--muted);opacity:0.7">'+gpsStr+'</div>' : ''}
       <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">${photoBtn}${editBtn}</div>
     </div>
   </div>`;
@@ -4887,7 +4813,7 @@ function reportListItem(r) {
 function viewReportPhotos(id) {
   const r = getReports().find(function(x) { return String(x.id) === String(id); });
   if (!r) return;
-  const allPhotos = [...(r.photosStart||[]), ...(r.photosEnd||[]), ...(r.photos||[])].filter(Boolean);
+  const allPhotos = [...(r.photosStart||[]), ...(r.photosEnd||[]), ...(r.photos||[])].filter(Boolean).map(function(p){ return typeof p==='string' ? p : p.src; });
   if (!allPhotos.length) { showToast('No photos found'); return; }
 
   const existing = document.getElementById('_photoModal');
