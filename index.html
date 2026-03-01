@@ -1919,17 +1919,6 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
           </div>
         </div>
 
-        <!-- Chamber Status (all roles) -->
-        <div class="field-group" id="cham-status-wrap">
-          <label>Chamber Status <span style="color:#FF453A">*</span></label>
-          <div class="radio-group" style="gap:6px;margin-top:4px">
-            <div class="radio-opt" onclick="selectRadio(this,'cham-status','Complete')" style="flex:1;text-align:center;font-size:12px">✅ Complete</div>
-            <div class="radio-opt" onclick="selectRadio(this,'cham-status','Partial')" style="flex:1;text-align:center;font-size:12px">⚡ Partial</div>
-            <div class="radio-opt" onclick="selectRadio(this,'cham-status','Incomplete')" style="flex:1;text-align:center;font-size:12px">⏳ Incomplete</div>
-          </div>
-          <input type="hidden" id="cham-status" value="">
-        </div>
-
         <!-- GPS + Photo -->
         <div class="field-group">
           <label>GPS Location</label>
@@ -1997,7 +1986,7 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
           </label>
           <div id="str-encasing-picker">
             <div style="font-size:12px;color:var(--muted);padding:14px;border:1px dashed var(--border);border-radius:10px;text-align:center">
-              📋 Select a route above to see flagged items
+              📋 Select a project & route to see CC/RCC encasing and thrust block items
             </div>
           </div>
           <input type="hidden" id="str-pipe-ref" value="">
@@ -3527,16 +3516,7 @@ function loadEncasingFlags() {
      (r.encasing && r.encasing !== 'Not Required'))
   );
 
-  if (!pipeReports.length) {
-    picker.innerHTML = `<div style="background:rgba(255,69,58,0.08);border:1px solid rgba(255,69,58,0.25);border-radius:10px;padding:14px 14px;display:flex;align-items:center;gap:10px">
-      <div style="font-size:20px">⚠️</div>
-      <div>
-        <div style="font-size:12px;font-weight:700;color:#FF453A;margin-bottom:2px">No items found</div>
-        <div style="font-size:11px;color:var(--muted)">No CC/RCC Encasing or Thrust Block fittings found on this route.</div>
-      </div>
-    </div>`;
-    return;
-  }
+  // Don't early-return — fittings with thrust block may still exist even if no pipe encasings
 
   // Build one card per individual encasing entry
   const cards = [];
@@ -3598,7 +3578,7 @@ function loadEncasingFlags() {
 
   picker.innerHTML = cards.length
     ? cards.join('')
-    : `<div style="font-size:12px;color:var(--muted);padding:10px;text-align:center">No flagged entries found.</div>`;
+    : `<div style="font-size:12px;color:var(--muted);padding:10px;text-align:center">No CC/RCC encasing or thrust block entries found for this route.</div>`;
 }
 
 function selectEncasingForConcrete(el) {
