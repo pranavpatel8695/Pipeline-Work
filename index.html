@@ -4880,7 +4880,12 @@ function renderAllReports() {
 
   let reports = getReports().filter(function(r){ return r.project === proj; });
   if (type) reports = reports.filter(function(r){ return r.type === type; });
-  reports = reports.slice().reverse();
+  // Sort by date descending (newest first), then by timestamp descending for same-day
+  reports = reports.slice().sort(function(a, b) {
+    var da = a.date || '0000-00-00', db = b.date || '0000-00-00';
+    if (db !== da) return db > da ? 1 : -1;
+    return (b.timestamp||b.id||0) > (a.timestamp||a.id||0) ? 1 : -1;
+  });
 
   if (reports.length === 0) {
     container.innerHTML = '<div class="empty-state"><div class="es-icon">📋</div><p>No reports found.</p></div>';
