@@ -1128,8 +1128,8 @@ function compressBase64(dataUrl, quality) {
 // ── Delete report from Firestore ────────────────────────────────────────────
 async function fbDeleteReport(id) {
   const ready = await fbInit();
-  if (!ready || !_db) return;
-  try { await _db.collection('reports').doc(String(id)).delete(); } catch(e) {}
+  if (!ready || !_db) return false;
+  try { await _db.collection('reports').doc(String(id)).delete(); return true; } catch(e) { return false; }
 }
 
 // ── Load all reports from Firestore ────────────────────────────────────────
@@ -4593,7 +4593,6 @@ function reportListItem(r) {
 }
 
 function deleteReport(id) {
-  fbDeleteReport(id); // remove from Firebase too
   const reports = getReports();
   const r = reports.find(function(x) { return String(x.id) === String(id); });
   if (!r) { showToast('Report not found'); return; }
@@ -4609,7 +4608,13 @@ function deleteReport(id) {
       renderAllReports();
       refreshMapPins();
       if (typeof renderTracker === 'function') renderTracker();
-      showToast('Report deleted');
+      showToast('🗑️ Deleted locally');
+      // Sync deletion to Firebase
+      fbUpdateStatus('saving');
+      fbDeleteReport(id).then(function(ok) {
+        fbUpdateStatus(ok ? 'synced' : 'offline');
+        if (ok) showToast('☁️ Deletion synced to cloud');
+      });
     }
   );
 }
