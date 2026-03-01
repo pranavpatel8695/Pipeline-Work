@@ -1690,11 +1690,11 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
         <div class="form-row">
           <div class="field-group">
             <label>Chainage From (m) <span style="color:#FF453A">*</span></label>
-            <input type="number" id="pipe-from" placeholder="e.g. 1200" oninput="autoCalcMeters('pipe');checkDepHint('pipe')">
+            <input type="number" id="pipe-from" placeholder="e.g. 1200" oninput="autoCalcMeters('pipe');checkDepHint('pipe');autoFillPipeFromSegments()">
           </div>
           <div class="field-group">
             <label>Chainage To (m) <span style="color:#FF453A">*</span></label>
-            <input type="number" id="pipe-to" placeholder="e.g. 1320" oninput="autoCalcMeters('pipe');checkDepHint('pipe')">
+            <input type="number" id="pipe-to" placeholder="e.g. 1320" oninput="autoCalcMeters('pipe');checkDepHint('pipe');autoFillPipeFromSegments()">
           </div>
         </div>
         <div id="pipe-dep-hint" style="margin-bottom:10px"></div>
@@ -2578,30 +2578,18 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
               <label>Route Name <span style="color:var(--muted);font-size:11px">— edit if needed</span></label>
               <input type="text" id="newRouteName" placeholder="e.g. Kothadar HW → Sanosara Vill.">
             </div>
-            <div class="form-row">
-              <div class="field-group">
-                <label>Total Length (m)</label>
-                <input type="number" id="newRouteLen" placeholder="Auto from KMZ">
-              </div>
-              <div class="field-group">
-                <label>Pipe Size</label>
-                <input type="text" id="newRoutePipeSize" placeholder="e.g. 200mm" list="pipeSizeList">
-                <datalist id="pipeSizeList">
-                  <option>100mm</option><option>150mm</option><option>200mm</option>
-                  <option>250mm</option><option>300mm</option><option>400mm</option>
-                  <option>500mm</option><option>600mm</option>
-                </datalist>
-              </div>
+            <div class="field-group">
+              <label>Total Length (m)</label>
+              <input type="number" id="newRouteLen" placeholder="Auto from KMZ">
             </div>
-            <div class="form-row">
-              <div class="field-group">
-                <label>Pipe Material</label>
-                <select id="newRoutePipeMaterial">
-                  <option value="">-- Select --</option>
-                  <option>DI (Ductile Iron)</option><option>uPVC</option>
-                  <option>HDPE</option><option>MS</option><option>CI</option>
-                </select>
-              </div>
+
+            <!-- Pipe Segments -->
+            <div class="field-group">
+              <label style="display:flex;justify-content:space-between;align-items:center">
+                <span>Pipe Segments <span style="color:var(--muted);font-size:10px">— different dia. for different chainage ranges</span></span>
+                <button type="button" onclick="addPipeSegmentRow()" style="background:rgba(10,132,255,0.15);border:1px dashed #0A84FF;border-radius:7px;padding:4px 10px;color:#0A84FF;font-size:11px;font-family:inherit;cursor:pointer">＋ Add</button>
+              </label>
+              <div id="pipeSegmentsList" style="margin-top:6px"></div>
             </div>
             <div class="field-group">
               <label>Route Colour on Map</label>
@@ -3276,28 +3264,69 @@ function selectRoute(el, hiddenId, val) {
 
 function populatePipeSizeMaterial(routes) {
   const sizes = [], materials = [];
-  routes.forEach(r => {
-    if (!r.pipe) return;
-    // pipe stored as "200mm DI (Ductile Iron)" — split at first space
-    const spaceIdx = r.pipe.indexOf(' ');
-    const sz  = spaceIdx > -1 ? r.pipe.slice(0, spaceIdx) : r.pipe;
-    const mat = spaceIdx > -1 ? r.pipe.slice(spaceIdx + 1) : '';
-    if (sz  && !sizes.includes(sz))     sizes.push(sz);
-    if (mat && !materials.includes(mat)) materials.push(mat);
+  routes.forEach(function(r) {
+    // New format: segments array
+    if (r.segments && r.segments.length) {
+      r.segments.forEach(function(s) {
+        if (s.size && !sizes.includes(s.size)) sizes.push(s.size);
+        if (s.material && !materials.includes(s.material)) materials.push(s.material);
+      });
+    } else if (r.pipe) {
+      // Legacy single pipe string
+      var spaceIdx = r.pipe.indexOf(' ');
+      var sz  = spaceIdx > -1 ? r.pipe.slice(0, spaceIdx) : r.pipe;
+      var mat = spaceIdx > -1 ? r.pipe.slice(spaceIdx + 1) : '';
+      if (sz  && !sizes.includes(sz))     sizes.push(sz);
+      if (mat && !materials.includes(mat)) materials.push(mat);
+    }
   });
 
   const sizeEl = document.getElementById('pipe-size');
   const matEl  = document.getElementById('pipe-material');
 
   if (sizes.length > 0) {
-    sizeEl.innerHTML = sizes.map(s => `<option value="${s}">${s}</option>`).join('');
+    sizeEl.innerHTML = '<option value="">-- Select --</option>' + sizes.map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join('');
   } else {
     sizeEl.innerHTML = '<option value="">Not set by admin</option>';
   }
   if (materials.length > 0) {
-    matEl.innerHTML = materials.map(m => `<option value="${m}">${m}</option>`).join('');
+    matEl.innerHTML = '<option value="">-- Select --</option>' + materials.map(function(m){ return '<option value="'+m+'">'+m+'</option>'; }).join('');
   } else {
     matEl.innerHTML = '<option value="">Not set by admin</option>';
+  }
+}
+
+// Auto-fill pipe size/material from route segments when chainage is entered
+function autoFillPipeFromSegments() {
+  var from = parseFloat(document.getElementById('pipe-from').value);
+  var to   = parseFloat(document.getElementById('pipe-to').value);
+  if (isNaN(from) || isNaN(to) || to <= from) return;
+  var mid = (from + to) / 2;
+  var routeName = document.getElementById('pipe-route').value;
+  var project   = document.getElementById('pipe-project').value;
+  if (!routeName || !project) return;
+  var routes = getAdminRoutes()[project] || [];
+  var route = routes.find(function(r){ return r.name === routeName; });
+  if (!route || !route.segments || !route.segments.length) return;
+  // Find segment whose range covers the midpoint
+  var match = route.segments.find(function(s){
+    return s.from != null && s.to != null && mid >= s.from && mid <= s.to;
+  }) || route.segments.find(function(s){ return s.size; }); // fallback: first with size
+  if (!match) return;
+  var sizeEl = document.getElementById('pipe-size');
+  var matEl  = document.getElementById('pipe-material');
+  if (match.size && sizeEl) {
+    // Add option if not present, then select
+    if (!Array.from(sizeEl.options).find(function(o){ return o.value === match.size; })) {
+      sizeEl.appendChild(new Option(match.size, match.size));
+    }
+    sizeEl.value = match.size;
+  }
+  if (match.material && matEl) {
+    if (!Array.from(matEl.options).find(function(o){ return o.value === match.material; })) {
+      matEl.appendChild(new Option(match.material, match.material));
+    }
+    matEl.value = match.material;
   }
 }
 
@@ -6106,7 +6135,7 @@ function exportPDF(mode) {
   </div>
 
 
-</body></html>`;
+<datalist id="pipeSizeList"><option>100mm</option><option>150mm</option><option>200mm</option><option>250mm</option><option>300mm</option><option>400mm</option><option>500mm</option><option>600mm</option></datalist></body></html>`;
 
   const blob = new Blob([fullHTML], { type: 'text/html' });
   const url  = URL.createObjectURL(blob);
@@ -7541,7 +7570,11 @@ function renderRouteAdmin() {
       <div class="route-admin-color" style="background:${r.color}"></div>
       <div class="route-admin-info">
         <div class="route-admin-name">${r.name}</div>
-        <div class="route-admin-meta">${(r.length/1000).toFixed(2)} km target · ${r.pipe || '—'}</div>
+        <div class="route-admin-meta">${(r.length/1000).toFixed(2)} km · ${
+          r.segments && r.segments.length
+            ? r.segments.map(function(s){ return (s.from!=null&&s.to!=null?s.from+'-'+s.to+'m: ':'')+(s.size||'')+(s.material?' '+s.material:''); }).join(' | ')
+            : (r.pipe || '—')
+        }</div>
       </div>
       <button class="route-admin-del" onclick="deleteRoute(${i})" title="Delete">🗑️</button>
     </div>`).join('');
@@ -7680,9 +7713,9 @@ function onLinePicked(line, idx) {
 
   // Pre-fill form
   document.getElementById('newRouteName').value = line.name;
-  document.getElementById('newRouteLen').value  = lenM;
-  document.getElementById('newRoutePipeSize').value = '';
-  document.getElementById('newRoutePipeMaterial').value = '';
+  document.getElementById('newRouteLen').value = lenM;
+  var segList = document.getElementById('pipeSegmentsList');
+  if (segList) segList.innerHTML = '';
   document.getElementById('routeDetailForm').classList.remove('hidden');
 
   // Scroll form into view
@@ -7698,21 +7731,61 @@ function haversineM(lat1,lon1,lat2,lon2) {
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
+function addPipeSegmentRow(prefill) {
+  var list = document.getElementById('pipeSegmentsList');
+  if (!list) return;
+  var row = document.createElement('div');
+  row.className = 'pipe-seg-row';
+  row.style.cssText = 'display:grid;grid-template-columns:75px 75px 1fr 1fr 28px;gap:6px;margin-bottom:6px;align-items:end';
+  var iSt = 'width:100%;padding:6px 7px;border-radius:7px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:12px;box-sizing:border-box';
+  var fromVal = (prefill && prefill.from != null) ? prefill.from : '';
+  var toVal   = (prefill && prefill.to   != null) ? prefill.to   : '';
+  var szVal   = (prefill && prefill.size)         ? prefill.size : '';
+  var mats = ['DI (Ductile Iron)','uPVC','HDPE','MS','CI'];
+  var matOpts = '<option value="">--</option>' + mats.map(function(m){
+    return '<option' + (prefill && prefill.material === m ? ' selected' : '') + '>' + m + '</option>';
+  }).join('');
+  row.innerHTML = [
+    '<div><div style="font-size:9px;color:var(--muted);margin-bottom:2px">From (m)</div>',
+    '<input type="number" class="seg-from" placeholder="0" style="' + iSt + '" value="' + fromVal + '"></div>',
+    '<div><div style="font-size:9px;color:var(--muted);margin-bottom:2px">To (m)</div>',
+    '<input type="number" class="seg-to" placeholder="end" style="' + iSt + '" value="' + toVal + '"></div>',
+    '<div><div style="font-size:9px;color:var(--muted);margin-bottom:2px">Dia / Size</div>',
+    '<input type="text" class="seg-size" placeholder="e.g. 200mm" list="pipeSizeList" style="' + iSt + '" value="' + szVal + '"></div>',
+    '<div><div style="font-size:9px;color:var(--muted);margin-bottom:2px">Material</div>',
+    '<select class="seg-mat" style="' + iSt + '">' + matOpts + '</select></div>',
+    '<div style="padding-top:14px"><button type="button" style="width:26px;height:26px;border-radius:6px;background:rgba(255,69,58,0.15);border:none;color:#FF453A;cursor:pointer;font-size:14px;padding:0">✕</button></div>'
+  ].join('');
+  row.querySelector('button').onclick = function() { row.remove(); };
+  list.appendChild(row);
+}
+
+function collectPipeSegments() {
+  var segs = [];
+  document.querySelectorAll('#pipeSegmentsList .pipe-seg-row').forEach(function(row) {
+    var from = parseFloat(row.querySelector('.seg-from').value);
+    var to   = parseFloat(row.querySelector('.seg-to').value);
+    var size = row.querySelector('.seg-size').value.trim();
+    var mat  = row.querySelector('.seg-mat').value.trim();
+    if (size || mat) segs.push({ from:isNaN(from)?null:from, to:isNaN(to)?null:to, size:size, material:mat });
+  });
+  return segs;
+}
+
 function saveNewRoute() {
   const name  = document.getElementById('newRouteName').value.trim();
   const len   = parseInt(document.getElementById('newRouteLen').value) || 0;
-  const pSize = document.getElementById('newRoutePipeSize').value.trim();
-  const pMat  = document.getElementById('newRoutePipeMaterial').value.trim();
-  const pipe  = [pSize, pMat].filter(Boolean).join(' ');
   const color = document.getElementById('newRouteColor').value;
   if (!name) { showToast('⚠️ Route name required'); return; }
   if (!len)  { showToast('⚠️ Target length required'); return; }
 
+  var segments = collectPipeSegments();
+  var firstSeg = segments[0];
+  var pipe = firstSeg ? [firstSeg.size, firstSeg.material].filter(Boolean).join(' ') : '';
+
   const routes = getAdminRoutes();
   if (!routes[settingsActiveProject]) routes[settingsActiveProject] = [];
-
-  const newRoute = { id:'R'+Date.now(), name, length:len, pipe, color };
-  // Link to KMZ line if picked from map
+  const newRoute = { id:'R'+Date.now(), name, length:len, pipe, segments, color };
   if (SMAP.pickedLine) {
     newRoute.kmzName    = SMAP.pickedLine.name;
     newRoute.kmzLineIdx = SMAP.pickedLine.kmzLineIdx;
@@ -7721,9 +7794,10 @@ function saveNewRoute() {
   saveAdminRoutes(routes);
   renderRouteAdmin();
   cancelPickMode();
-  SMAP.draw(); // refresh saved-route badges
+  SMAP.draw();
   showToast('✅ Route saved');
 }
+
 
 function renderColorPicker() {
   const picker = document.getElementById('colorPicker');
