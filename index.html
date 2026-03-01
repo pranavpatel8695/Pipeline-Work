@@ -1971,7 +1971,6 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
               <input type="hidden" id="cham-slab-kept" value="">
             </div>
           </div>
-          </div>
         </div>
 
         <!-- Chamber Status (all roles) -->
@@ -4798,8 +4797,13 @@ function _drawAdminRoutes(proj) {
   _lRouteLayer.clearLayers();
   const geoRaw = localStorage.getItem('aquatrack_kmz_geo_' + proj);
   if (geoRaw) return; // KMZ takes over
-  const adminRoutes = getAdminRoutes()[proj] || [];
-  if (!adminRoutes.length) return;
+  const allRoutes = getAdminRoutes();
+  const adminRoutes = allRoutes[proj] || [];
+  if (!adminRoutes.length) {
+    console.log('[Map] No routes for project:', proj, 'Available:', Object.keys(allRoutes));
+    return;
+  }
+  console.log('[Map] Drawing', adminRoutes.length, 'routes for', proj);
   // Draw schematic lines radiating from center
   const center = [22.818, 70.813];
   adminRoutes.forEach((route, i) => {
@@ -5164,7 +5168,14 @@ function _autoFitMap(proj) {
   const reports = getReports().filter(r => r.lat && r.lon && (!proj || r.project === proj));
   if (reports.length) {
     _lmap.fitBounds(L.latLngBounds(reports.map(r => [r.lat, r.lon])).pad(0.15));
+    return;
   }
+  // Fit to schematic route layer bounds if drawn
+  if (_lRouteLayer && _lRouteLayer.getLayers().length) {
+    try { _lmap.fitBounds(_lRouteLayer.getBounds().pad(0.3)); return; } catch(e) {}
+  }
+  // Default: zoom to a reasonable level
+  _lmap.setView([22.818, 70.813], 13);
 }
 
 // Stub — kept for compatibility (old canvas MAP object references)
