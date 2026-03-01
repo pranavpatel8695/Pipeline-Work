@@ -6416,36 +6416,48 @@ function renderSupervisorAccounts() {
     }; })(username, u));
   });
 
+  const allProjects = getProjects();
+  const assignments = getProjectAssignments();
+
   el.innerHTML = supervisors.map(function(username, i) {
     const u = users[username];
-    const assignments = getProjectAssignments();
-    const allProjects = getProjects();
     const assignedProjs = allProjects.filter(function(p) {
       return (assignments[p] || []).indexOf(username) >= 0;
     });
-    // Fallback to u.projects if assignments not set
-    const projList = assignedProjs.length ? assignedProjs.join(', ') :
-      (u.projects && u.projects.length ? u.projects.join(', ') : 'None assigned');
-    return [
-      '<div style="border-radius:10px;border:1px solid var(--border);background:var(--surface2);margin-bottom:10px;overflow:hidden">',
-        '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px">',
-          '<div style="width:36px;height:36px;border-radius:10px;background:rgba(10,132,255,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--blue);flex-shrink:0">',
-            u.name[0].toUpperCase(),
-          '</div>',
-          '<div style="flex:1;min-width:0">',
-            '<div style="font-size:13px;font-weight:700;color:var(--text)">', u.name, '</div>',
-            '<div style="font-size:11px;color:var(--muted);margin-top:2px">',
-              'User: <b style="color:#0A84FF">', username, '</b>',
-              '&nbsp;&nbsp;Pass: <b style="color:#30D158">', u.pass, '</b>',
-            '</div>',
-            '<div style="font-size:10px;color:var(--muted);margin-top:2px">📁 ', projList, '</div>',
-          '</div>',
-          '<button onclick="window._supShare[', i, ']()" style="background:rgba(48,209,88,0.12);border:1px solid rgba(48,209,88,0.4);border-radius:8px;padding:6px 12px;color:#30D158;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;flex-shrink:0;margin-right:6px">📤 Share</button>',
-          '<button onclick="window._supDelete[', i, ']()" style="background:rgba(255,69,58,0.12);border:1px solid rgba(255,69,58,0.4);border-radius:8px;padding:6px 12px;color:#FF453A;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;flex-shrink:0">Remove</button>',
-        '</div>',
+    const projList = assignedProjs.length ? assignedProjs.join(', ') : 'None assigned';
 
-      '</div>'
-    ].join('');
+    // Build project checkboxes
+    const projChecks = allProjects.length ? allProjects.map(function(p) {
+      const checked = (assignments[p] || []).indexOf(username) >= 0;
+      return '<div onclick="toggleSupAssignProject(\'' + username + '\',\'' + p.replace(/'/g,"\\\\'") + '\')" '
+        + 'style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;'
+        + 'background:' + (checked ? 'rgba(10,132,255,0.1)' : 'rgba(255,255,255,0.03)') + ';'
+        + 'border:1px solid ' + (checked ? 'rgba(10,132,255,0.35)' : 'var(--border)') + ';margin-bottom:6px">'
+        + '<div style="width:18px;height:18px;border-radius:5px;border:2px solid;flex-shrink:0;display:flex;align-items:center;justify-content:center;'
+        + (checked ? 'background:#0A84FF;border-color:#0A84FF' : 'background:transparent;border-color:rgba(255,255,255,0.2)') + '">'
+        + (checked ? '<span style="color:#fff;font-size:11px;font-weight:700">✓</span>' : '')
+        + '</div>'
+        + '<span style="font-size:12px;color:var(--text);flex:1">' + p + '</span>'
+        + (checked ? '<span style="font-size:10px;color:#0A84FF;font-weight:700">Assigned</span>' : '')
+        + '</div>';
+    }).join('') : '<div style="font-size:11px;color:var(--muted)">No projects created yet</div>';
+
+    return '<div style="border-radius:12px;border:1px solid var(--border);background:var(--surface2);margin-bottom:12px;overflow:hidden">'
+      + '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px">'
+        + '<div style="width:38px;height:38px;border-radius:10px;background:rgba(10,132,255,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--blue);flex-shrink:0">' + u.name[0].toUpperCase() + '</div>'
+        + '<div style="flex:1;min-width:0">'
+          + '<div style="font-size:14px;font-weight:700;color:var(--text)">' + u.name + '</div>'
+          + '<div style="font-size:11px;color:var(--muted);margin-top:1px">@' + username + ' &nbsp;·&nbsp; Pass: <b style="color:#30D158">' + u.pass + '</b></div>'
+          + '<div style="font-size:10px;color:var(--muted);margin-top:2px">📁 ' + projList + '</div>'
+        + '</div>'
+        + '<button onclick="window._supShare[' + i + ']()" style="background:rgba(48,209,88,0.12);border:1px solid rgba(48,209,88,0.4);border-radius:8px;padding:6px 10px;color:#30D158;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;flex-shrink:0;margin-right:6px">📤</button>'
+        + '<button onclick="window._supDelete[' + i + ']()" style="background:rgba(255,69,58,0.12);border:1px solid rgba(255,69,58,0.4);border-radius:8px;padding:6px 10px;color:#FF453A;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;flex-shrink:0">🗑️</button>'
+      + '</div>'
+      + '<div style="padding:0 14px 12px">'
+        + '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px">Assign Projects</div>'
+        + projChecks
+      + '</div>'
+    + '</div>';
   }).join('');
 }
 
@@ -6694,6 +6706,18 @@ function confirmAddSupervisor() {
   showToast('✅ ' + name + ' added — can now login on any device');
 }
 
+function toggleSupAssignProject(username, project) {
+  const assignments = getProjectAssignments();
+  if (!assignments[project]) assignments[project] = [];
+  const idx = assignments[project].indexOf(username);
+  if (idx >= 0) assignments[project].splice(idx, 1);
+  else assignments[project].push(username);
+  saveProjectAssignments(assignments);
+  syncUserProjects();
+  fbPushAdminData();
+  renderSupervisorAccounts();
+}
+
 function renderSupervisorAssign() {
   const el = document.getElementById('supervisorAssignList');
   if (!el) return;
@@ -6737,16 +6761,10 @@ function toggleSupervisorAssign(username) {
   const assignments = getProjectAssignments();
   if (!assignments[project]) assignments[project] = [];
   const idx = assignments[project].indexOf(username);
-  if (idx >= 0) {
-    assignments[project].splice(idx, 1);
-  } else {
-    assignments[project].push(username);
-  }
+  if (idx >= 0) assignments[project].splice(idx, 1);
+  else assignments[project].push(username);
   saveProjectAssignments(assignments);
-
-  // Also store allowed projects directly inside the user record so it travels with backups
   syncUserProjects();
-
   renderSupervisorAssign();
   showToast(idx >= 0
     ? getUsers()[username].name + ' removed from ' + project
