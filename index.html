@@ -1357,7 +1357,7 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
     <div class="nav-tab active" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="tab-icon">📊</span>Dashboard</div>
     <div class="nav-tab supervisor-only" data-tab="submit" onclick="switchTab('submit')"><span class="tab-icon">📝</span>Submit Report</div>
     <div class="nav-tab" data-tab="map" onclick="switchTab('map')"><span class="tab-icon">🗺️</span>Map View</div>
-    <div class="nav-tab admin-only" data-tab="reports" onclick="switchTab('reports')"><span class="tab-icon">📋</span>All Reports</div>
+    <div class="nav-tab" data-tab="reports" onclick="switchTab('reports')"><span class="tab-icon">📋</span>All Reports</div>
     <div class="nav-tab admin-only" data-tab="tracker" onclick="switchTab('tracker')"><span class="tab-icon">📏</span>Tracker</div>
     <div class="nav-tab admin-only" data-tab="settings" onclick="switchTab('settings')"><span class="tab-icon">⚙️</span>Projects</div>
   </div>
@@ -3270,6 +3270,7 @@ function calcRefVolume() {
 let _editingReportId = null;
 
 function editReport(id) {
+  if (currentRole !== 'admin') { showToast('Only admin can edit reports'); return; }
   const reports = getReports();
   const r = reports.find(r => r.id == id || String(r.id) === String(id));
   if (!r) return;
@@ -4712,7 +4713,7 @@ function reportListItem(r) {
     t = { label: r.type||'Report', cls:'excavation', icon:'📄', info:'(display error)' };
   }
   const d = r.date || (r.timestamp||'').split('T')[0];
-  const canEdit = (currentRole === 'supervisor' && r.supervisor === currentUser) || currentRole === 'admin';
+  const canEdit = currentRole === 'admin';
   const _allP = [];
   ['photosStart','photosEnd','photos'].forEach(function(k){ (r[k]||[]).forEach(function(p){ if(p && p.length>10) _allP.push({src:p,label:k}); }); });
   const photoCount = _allP.length;
@@ -4778,11 +4779,10 @@ function viewReportPhotos(id) {
 }
 
 function deleteReport(id) {
+  if (currentRole !== 'admin') { showToast('Only admin can delete reports'); return; }
   const reports = getReports();
   const r = reports.find(function(x) { return String(x.id) === String(id); });
   if (!r) { showToast('Report not found'); return; }
-  const canDelete = (currentRole === 'supervisor' && r.supervisor === currentUser) || currentRole === 'admin';
-  if (!canDelete) { showToast('You can only delete your own reports'); return; }
   const depWarn = getEditDeleteDepMsg(r, 'delete');
   const delMsg = 'Delete this ' + (r.type||'') + ' report dated ' + (r.date||'') + '? Cannot be undone.' + (depWarn ? ' Warning: ' + depWarn : '');
   showConfirmModal(
