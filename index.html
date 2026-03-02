@@ -4821,17 +4821,18 @@ function reportListItem(r) {
   const editBtn = canEdit
     ? `<button onclick="editReport('${r.id}')" style="font-size:11px;padding:4px 8px;border-radius:6px;background:rgba(10,132,255,0.1);border:1px solid rgba(10,132,255,0.25);color:var(--blue);cursor:pointer;font-family:inherit;margin-right:4px">Edit</button><button onclick="deleteReport('${r.id}')" style="font-size:11px;padding:4px 8px;border-radius:6px;background:rgba(255,69,58,0.1);border:1px solid rgba(255,69,58,0.25);color:#FF453A;cursor:pointer;font-family:inherit">Delete</button>`
     : '';
-  return `<div class="report-list-item">
-    <div class="rl-icon-wrap rl-${t.cls}">${t.icon}</div>
+  return `<div class="report-list-item" style="align-items:flex-start">
+    <div class="rl-icon-wrap rl-${t.cls}" style="margin-top:2px">${t.icon}</div>
     <div class="report-item-info" style="flex:1;min-width:0">
-      <div class="report-item-title" style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.label} <span style="color:var(--muted);font-weight:400">· ${r.project||''}</span></div>
-      <div class="report-item-meta" style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.info}</div>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
-      <div style="font-size:10px;color:var(--muted)">${d}</div>
-      <div style="font-size:10px;color:var(--muted)">${r.supervisor||''}</div>
-      ${gpsStr ? '<div style="font-size:9px;color:var(--muted);opacity:0.7">'+gpsStr+'</div>' : ''}
-      <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">${photoBtn}${editBtn}</div>
+      <div class="report-item-title" style="font-size:13px;font-weight:600;color:var(--text);word-break:break-word">${t.label} <span style="color:var(--muted);font-weight:400">· ${r.project||''}</span></div>
+      <div class="report-item-meta" style="font-size:11px;color:var(--muted);margin-top:3px;word-break:break-word;line-height:1.5">${t.info}</div>
+      <div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
+        <div>
+          <span style="font-size:10px;color:var(--muted)">${d} · ${r.supervisor||''}</span>
+          ${gpsStr ? '<div style="font-size:9px;color:var(--muted);opacity:0.7;margin-top:2px">'+gpsStr+'</div>' : ''}
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">${photoBtn}${editBtn}</div>
+      </div>
     </div>
   </div>`;
 }
