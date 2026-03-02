@@ -7377,9 +7377,10 @@ function getKmzData() {
   return JSON.parse(localStorage.getItem('aquatrack_kmz') || '{}');
 }
 function renderKmzStatus() {
+  const el = document.getElementById('kmzStatus');
+  if (!el) return; // KMZ section removed
   const all = getKmzData();
   const d = all[settingsActiveProject];
-  const el = document.getElementById('kmzStatus');
   if (!d) { el.innerHTML = ''; return; }
   el.innerHTML = `<div class="kmz-loaded">
     <div class="kmz-loaded-icon">✅</div>
