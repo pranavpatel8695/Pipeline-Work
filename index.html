@@ -2740,11 +2740,13 @@ function doLogin() {
       const fbUsers = d.users || {};
       if (fbUsers[user] && fbUsers[user].pass === pass) {
         const existing = getUsers();
-        // Never overwrite local admin credentials with Firebase copy
-        Object.keys(fbUsers).forEach(function(u) {
-          if (fbUsers[u].role !== 'admin') existing[u] = fbUsers[u];
-        });
-        saveUsers(existing);
+        // Merge Firebase supervisors into local — never overwrite admin or remove existing
+        if (fbUsers && Object.keys(fbUsers).length > 0) {
+          Object.keys(fbUsers).forEach(function(u) {
+            if (fbUsers[u].role !== 'admin') existing[u] = fbUsers[u];
+          });
+          saveUsers(existing);
+        }
         if (d.projects)    localStorage.setItem('aquatrack_projects',    JSON.stringify(d.projects));
         if (d.routes)      localStorage.setItem('aquatrack_routes',      JSON.stringify(d.routes));
         if (d.assignments) localStorage.setItem('aquatrack_assignments', JSON.stringify(d.assignments));
@@ -2781,8 +2783,10 @@ async function _doLoginSuccess(user) {
             localStorage.setItem('aquatrack_routes', typeof d.routes === 'string' ? d.routes : JSON.stringify(d.routes));
           if (d.assignments)
             localStorage.setItem('aquatrack_assignments', JSON.stringify(d.assignments));
-          if (d.users) {
+          if (d.users && Object.keys(d.users).length > 0) {
             const existing = getUsers();
+            // Merge: Firebase is authoritative for supervisor list,
+            // but NEVER remove a user that exists locally
             Object.keys(d.users).forEach(function(u) {
               if (d.users[u].role !== 'admin') existing[u] = d.users[u];
             });
