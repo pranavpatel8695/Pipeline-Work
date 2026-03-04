@@ -15,7 +15,8 @@
 
 <title>Pipeline Work — Field Reporting</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<!-- Cambria is a system font, no import needed -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <!-- Leaflet map -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <!-- Firebase loaded dynamically -->
@@ -37,7 +38,7 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: 'Cambria', Georgia, serif;
+    font-family: 'Noto Serif', Cambria, Georgia, serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
@@ -81,14 +82,14 @@
     width: 48px; height: 48px; object-fit: contain;
   }
   .login-logo h1 {
-    font-family: 'Cambria', Georgia, serif;
+    font-family: 'Noto Serif', Cambria, Georgia, serif;
     font-size: 22px;
     font-weight: 800;
     color: var(--text);
   }
   .login-logo p { font-size: 12px; color: var(--muted); }
   .login-card h2 {
-    font-family: 'Cambria', Georgia, serif;
+    font-family: 'Noto Serif', Cambria, Georgia, serif;
     font-size: 26px;
     font-weight: 700;
     margin-bottom: 6px;
@@ -112,7 +113,7 @@
     color: var(--text);
     border-radius: 10px;
     padding: 11px 13px;
-    font-family: 'Cambria', Georgia, serif;
+    font-family: 'Noto Serif', Cambria, Georgia, serif;
     font-size: 14px;
     outline: none;
     transition: border-color 0.2s, background 0.2s;
@@ -129,7 +130,7 @@
     border: none;
     border-radius: 12px;
     padding: 14px;
-    font-family: 'Cambria', Georgia, serif;
+    font-family: 'Noto Serif', Cambria, Georgia, serif;
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
@@ -163,7 +164,7 @@
   }
   .topbar-left { display: flex; align-items: center; gap: 10px; }
   .topbar-logo {
-    font-family: 'Cambria', Georgia, serif;
+    font-family: 'Noto Serif', Cambria, Georgia, serif;
     font-size: 18px;
     font-weight: 800;
     color: var(--text);
@@ -198,7 +199,7 @@
     padding: 6px 12px;
     border-radius: 8px;
     cursor: pointer;
-    font-family: 'Cambria', Georgia, serif;
+    font-family: 'Noto Serif', Cambria, Georgia, serif;
     transition: color 0.2s;
   }
   .logout-btn:hover { color: var(--text); }
@@ -225,7 +226,7 @@
     border-bottom: 2px solid transparent;
     transition: all 0.2s;
     white-space: nowrap;
-    font-family: 'Cambria', Georgia, serif;
+    font-family: 'Noto Serif', Cambria, Georgia, serif;
     display: flex;
     align-items: center;
     gap: 5px;
@@ -249,7 +250,7 @@
     animation: fadeUp 0.25s ease;
   }
   .card-title {
-    font-family: 'Cambria', Georgia, serif;
+    font-family: 'Noto Serif', Cambria, Georgia, serif;
     font-size: 15px;
     font-weight: 700;
     margin-bottom: 14px;
@@ -259,7 +260,7 @@
     color: var(--text);
   }
   .section-header {
-    font-family: 'Cambria', Georgia, serif;
+    font-family: 'Noto Serif', Cambria, Georgia, serif;
     font-size: 20px;
     font-weight: 800;
     margin-bottom: 4px;
@@ -306,7 +307,7 @@
     line-height: 1;
   }
   .report-btn .rb-title {
-    font-family: 'Cambria', Georgia, serif;
+    font-family: 'Noto Serif', Cambria, Georgia, serif;
     font-size: 13px;
     font-weight: 700;
     color: var(--text);
@@ -361,7 +362,7 @@
     color: var(--muted);
     border-radius: 12px;
     padding: 13px;
-    font-family: 'Cambria', Georgia, serif;
+    font-family: 'Noto Serif', Cambria, Georgia, serif;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -424,7 +425,7 @@
   }
   .dash-stat-card:active { transform: scale(0.97); }
   .dsc-icon  { font-size: 26px; flex-shrink: 0; line-height: 1; }
-  .dsc-value { font-family: 'Cambria', Georgia, serif; font-size: 22px; font-weight: 800; line-height: 1; }
+  .dsc-value { font-family: 'Noto Serif', Cambria, Georgia, serif; font-size: 22px; font-weight: 800; line-height: 1; }
   .dsc-label { font-size: 10px; font-weight: 600; opacity: 0.75; margin-top: 2px; }
   .dsc-sub   { font-size: 9px; opacity: 0.55; margin-top: 1px; }
   .dsc-exc  { background:rgba(255,159,10,0.12); border-color:rgba(255,159,10,0.22); color:#FF9F0A; }
@@ -507,7 +508,7 @@
     overflow: hidden;
   }
   /* Leaflet dark overrides */
-  .leaflet-container { background: #1a2030; font-family: 'Cambria', Georgia, serif; }
+  .leaflet-container { background: #1a2030; font-family: 'Noto Serif', Cambria, Georgia, serif; }
   .leaflet-control-attribution { font-size: 9px; }
   .leaflet-popup-content-wrapper {
     background: var(--surface);
@@ -517,7 +518,7 @@
     box-shadow: 0 8px 32px rgba(0,0,0,0.5);
   }
   .leaflet-popup-tip { background: var(--surface); }
-  .leaflet-popup-content { margin: 12px 16px; font-family: 'Cambria', Georgia, serif; }
+  .leaflet-popup-content { margin: 12px 16px; font-family: 'Noto Serif', Cambria, Georgia, serif; }
   /* Layer toggle button */
   .map-layer-btn {
     background: var(--surface);
@@ -558,7 +559,7 @@
     color: var(--muted);
     border-radius: 12px;
     padding: 11px 8px;
-    font-family: 'Cambria', Georgia, serif;
+    font-family: 'Noto Serif', Cambria, Georgia, serif;
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
@@ -696,20 +697,20 @@
     border-radius: 50%; margin-right: 8px; vertical-align: middle;
   }
   .popup-title {
-    font-family: 'Cambria', Georgia, serif; font-size: 17px; font-weight: 700;
+    font-family: 'Noto Serif', Cambria, Georgia, serif; font-size: 17px; font-weight: 700;
     margin-bottom: 4px;
   }
   .popup-meta { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
   .popup-btns { display: flex; gap: 10px; }
   .popup-btn-report {
     flex: 2; background: var(--blue); color: #fff; border: none;
-    border-radius: 10px; padding: 13px; font-family: 'Cambria', Georgia, serif;
+    border-radius: 10px; padding: 13px; font-family: 'Noto Serif', Cambria, Georgia, serif;
     font-size: 14px; font-weight: 700; cursor: pointer;
   }
   .popup-btn-close {
     flex: 1; background: var(--surface2); color: var(--text);
     border: 1px solid var(--border); border-radius: 10px; padding: 13px;
-    font-family: 'Cambria', Georgia, serif; font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: 'Noto Serif', Cambria, Georgia, serif; font-size: 14px; font-weight: 600; cursor: pointer;
   }
   /* highlight selected KMZ line on map */
   .map-hint {
@@ -772,7 +773,7 @@
   .kmz-upload-zone:hover, .kmz-upload-zone.drag { border-color: var(--blue); }
   .kmz-upload-zone input { display: none; }
   .kmz-icon { font-size: 36px; margin-bottom: 8px; }
-  .kmz-upload-zone h3 { font-family:'Cambria',Georgia,serif; font-size:15px; font-weight:700; margin-bottom:4px; }
+  .kmz-upload-zone h3 { font-family:'Noto Serif',Cambria,Georgia,serif; font-size:15px; font-weight:700; margin-bottom:4px; }
   .kmz-upload-zone p { font-size:12px; color:var(--muted); }
   .kmz-loaded {
     display: flex; align-items: center; gap: 12px; padding: 14px;
@@ -2279,7 +2280,7 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
       <!-- Route Management -->
       <div class="card">
         <div class="card-title">🛣️ Pipeline Routes
-          <span style="font-size:11px;color:var(--muted);font-family:'Cambria',Georgia,serif;font-weight:400;margin-left:8px">Supervisors select from these when submitting reports</span>
+          <span style="font-size:11px;color:var(--muted);font-family:'Noto Serif',Cambria,Georgia,serif;font-weight:400;margin-left:8px">Supervisors select from these when submitting reports</span>
         </div>
 
         <!-- Supervisor Assignment -->
@@ -4589,7 +4590,7 @@ function updateDashboard() {
   // ── Collect visible reports ───────────────────────────────────────────────
   var all = getReports();
   var vis = all.filter(function(r){ return getVisibleProjects().indexOf(r.project) >= 0; });
-  if (currentRole === 'supervisor') vis = vis.filter(function(r){ return r.supervisor === currentUser; });
+  
   if (selProj) vis = vis.filter(function(r){ return r.project === selProj; });
 
   var today = new Date().toISOString().slice(0,10);
@@ -5216,7 +5217,7 @@ function _drawPins(proj) {
   _lPinLayer.clearLayers();
 
   const reports   = getReports();
-  const visible   = (currentRole === 'admin' ? reports : reports.filter(r => r.supervisor === currentUser))
+  const visible   = reports
                       .filter(r => !proj || r.project === proj);
   const allRoutes = Object.values(getAdminRoutes()).flat();
 
@@ -5569,7 +5570,7 @@ function renderChainageDiagram() {
   var routes = getAdminRoutes()[proj] || [];
   if (!routes.length) { el.innerHTML = '<div class="empty-state"><div class="es-icon">🛣️</div><p>No routes for this project. Add routes in Settings.</p></div>'; return; }
   var reports = getReports().filter(function(r){ return r.project === proj; });
-  if (currentRole === 'supervisor') reports = reports.filter(function(r){ return r.supervisor === currentUser; });
+  
 
   el.innerHTML = routes.map(function(route) {
     var reps     = reports.filter(function(r){ return r.route === route.name || r.route === route.id; });
