@@ -952,7 +952,7 @@
   // 2. Register inline service worker via blob
   if ('serviceWorker' in navigator) {
     const swCode = `
-const CACHE='pw-v3';
+const CACHE='pw-v4';
 const URLS=[self.location.origin+self.location.pathname];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS).catch(()=>{})));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});
