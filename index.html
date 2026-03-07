@@ -4758,10 +4758,16 @@ function reportListItem(r) {
         t = { label:'Excavation', cls:'excavation', icon:'⛏️',
               info: 'Ch:'+(r.from||0)+'-'+(r.to||0)+'m · '+(r.meters||0)+'m · '+(r.soil||'')+(r.width?' W:'+r.width+'m':'')+(r.depth?' D:'+r.depth+'m':'') };
         break;
-      case 'pipe':
+      case 'pipe': {
+        const encList = r.encasings && r.encasings.length
+          ? r.encasings.filter(e => e.type && e.type !== 'Not Required')
+              .map(e => e.type.replace(' Required','') + (e.from!=null?' Ch:'+e.from+'-'+e.to+'m':'')).join(', ')
+          : (r.encasing && r.encasing !== 'Not Required' ? r.encasing.replace(' Required','') : '');
+        const encStr = encList ? ' · 🧱 '+encList : ' · No Encasing';
         t = { label:'Pipe Laying', cls:'pipe', icon:'🔩',
-              info: 'Ch:'+(r.from||0)+'-'+(r.to||0)+'m · '+(r.meters||0)+'m · '+(r.size||'')+(r.material?' '+r.material:'') };
+              info: 'Ch:'+(r.from||0)+'-'+(r.to||0)+'m · '+(r.meters||0)+'m · '+(r.size||'')+(r.material?' '+r.material:'')+encStr };
         break;
+      }
       case 'refill':
         t = { label:'Refilling', cls:'refill', icon:'🪣',
               info: 'Ch:'+(r.from||0)+'-'+(r.to||0)+'m · '+(r.meters||0)+'m · Road:'+(r.road||'-') };
@@ -6547,7 +6553,7 @@ function mergeSegments(segs) {
 }
 
 function findGapsInCovered(segs, totalLen) {
-  if (!segs.length) return [];
+  if (!segs.length) return [{ from: 0, to: totalLen }];
   const gaps = [];
   if (segs[0].from > 0) gaps.push({ from: 0, to: segs[0].from });
   for (let i = 1; i < segs.length; i++) {
@@ -6555,7 +6561,10 @@ function findGapsInCovered(segs, totalLen) {
       gaps.push({ from: segs[i-1].to, to: segs[i].from });
     }
   }
-  // Don't flag end-of-route gap (pipe may be ongoing)
+  // Also flag trailing gap at end of route
+  if (segs[segs.length-1].to < totalLen) {
+    gaps.push({ from: segs[segs.length-1].to, to: totalLen });
+  }
   return gaps;
 }
 
