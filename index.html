@@ -7684,9 +7684,15 @@ function renderSpecialsList() {
       +       '<div style="font-size:9px;color:var(--muted)">Left</div>'
       +     '</div>'
       +   '</div>'
-      +   '<input type="number" min="0" placeholder="Set Total" value="' + (total || '') + '" '
-      +     'onchange="updateSpecialTotal(' + i + ',this.value)" '
-      +     'style="width:75px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:12px;text-align:center">'
+      +   '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">'
+      +     '<div style="display:flex;gap:5px;align-items:center">'
+      +       '<input type="number" id="stock-input-' + i + '" min="1" placeholder="Qty" '
+      +         'style="width:55px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:12px;text-align:center">'
+      +       '<button onclick="addStock(' + i + ')" '
+      +         'style="padding:6px 11px;border-radius:8px;border:1px solid rgba(48,209,88,0.4);background:rgba(48,209,88,0.12);color:#30D158;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer">＋ Stock</button>'
+      +     '</div>'
+      +     '<div style="font-size:9px;color:var(--muted)">Total: ' + total + ' nos</div>'
+      +   '</div>'
       + '</div>'
       + (total > 0 ? '<div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden">'
       +   '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:3px;transition:width 0.3s"></div>'
@@ -7724,6 +7730,23 @@ function updateSpecialTotal(idx, value) {
   all[proj][idx] = (typeof s === 'string') ? { name: s, total: parseInt(value) || 0 } : { ...s, total: parseInt(value) || 0 };
   saveProjectSpecials(all);
   renderSpecialsList();
+}
+
+function addStock(idx) {
+  const proj = settingsActiveProject;
+  if (!proj) return;
+  const input = document.getElementById('stock-input-' + idx);
+  const qty = parseInt(input ? input.value : 0) || 0;
+  if (qty <= 0) { showToast('⚠️ Enter quantity to add'); return; }
+  const all = getProjectSpecials();
+  if (!all[proj] || !all[proj][idx]) return;
+  const s = all[proj][idx];
+  const current = (typeof s === 'string') ? { name: s, total: 0 } : { ...s };
+  current.total = (current.total || 0) + qty;
+  all[proj][idx] = current;
+  saveProjectSpecials(all);
+  renderSpecialsList();
+  showToast('✅ Added ' + qty + ' nos to ' + current.name + ' — New total: ' + current.total);
 }
 
 function deleteSpecial(idx) {
