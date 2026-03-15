@@ -7057,7 +7057,7 @@ function buildDefaultRoutes() {
 }
 
 function renderProjectTabs() {
-  const projects = getProjects();
+  const projects = (currentRole === 'pm') ? getVisibleProjects() : getProjects();
   if (!projects.includes(settingsActiveProject)) settingsActiveProject = projects[0];
   const tabRow = document.getElementById('settingsProjTabs');
   let t = '';
@@ -7700,8 +7700,9 @@ function deleteSpecial(idx) {
 }
 
 function initSettings() {
-  if (!settingsActiveProject || !getProjects().includes(settingsActiveProject))
-    settingsActiveProject = getProjects()[0];
+  const visProj = getVisibleProjects();
+  if (!settingsActiveProject || !visProj.includes(settingsActiveProject))
+    settingsActiveProject = visProj[0] || getProjects()[0];
   if (currentRole === 'admin') syncUserProjects(); // keep user records in sync
   renderProjectTabs();
   renderKmzStatus();
