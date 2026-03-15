@@ -1378,7 +1378,13 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
         <div id="progressBars"><div style="font-size:12px;color:var(--muted)">No projects yet</div></div>
       </div>
 
-      <!-- ⑤ RECENT ACTIVITY -->
+      <!-- ⑤ SPECIALS TRACKER (admin/PM only) -->
+      <div id="dashSpecialsCard" class="card" style="margin-bottom:4px;display:none">
+        <div class="card-title">⭐ Fitting Specials — Stock Tracker</div>
+        <div id="dashSpecialsList"></div>
+      </div>
+
+      <!-- ⑥ RECENT ACTIVITY -->
       <div class="dash-section-label">🕐 Recent Activity</div>
       <div class="card" style="padding:0 16px;margin-bottom:4px">
         <div id="recentReports">
@@ -2103,7 +2109,7 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
 
         <div class="field-group">
           <label>Project <span style="color:#FF453A">*</span></label>
-          <select id="fit-project" onchange="updateRoutes('fit')"></select>
+          <select id="fit-project" onchange="updateRoutes('fit');populateFitTypeDropdown()"></select>
         </div>
         <div class="field-group">
           <label>Date <span style="color:#FF453A">*</span></label>
@@ -2120,16 +2126,19 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
         </div>
         <div class="field-group">
           <label>Type of Fitting <span style="color:#FF453A">*</span></label>
-          <div id="fit-type-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:4px">
-            <div class="radio-opt" onclick="selectFittingType(this,'Tee')">🔀 Tee</div>
-            <div class="radio-opt" onclick="selectFittingType(this,'Bend 90°')">↩️ Bend 90°</div>
-            <div class="radio-opt" onclick="selectFittingType(this,'Bend 45°')">↪️ Bend 45°</div>
-            <div class="radio-opt" onclick="selectFittingType(this,'Reducer')">🔻 Reducer</div>
-            <div class="radio-opt" onclick="selectFittingType(this,'Flange')">⭕ Flange</div>
-            <div class="radio-opt" onclick="selectFittingType(this,'Coupling')">🔗 Coupling</div>
-            <div class="radio-opt" onclick="selectFittingType(this,'Cap/Blank')">🔵 Cap/Blank</div>
-            <div class="radio-opt" onclick="selectFittingType(this,'Other')">📝 Other</div>
-          </div>
+          <select id="fit-type-select" onchange="onFitTypeChange(this)" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:14px">
+            <option value="">— Select Type —</option>
+            <optgroup label="Standard">
+              <option value="Tee">🔀 Tee</option>
+              <option value="Bend 90°">↩️ Bend 90°</option>
+              <option value="Bend 45°">↪️ Bend 45°</option>
+              <option value="Reducer">🔻 Reducer</option>
+              <option value="Flange">⭕ Flange</option>
+              <option value="Coupling">🔗 Coupling</option>
+              <option value="Cap/Blank">🔵 Cap/Blank</option>
+              <option value="Other">📝 Other</option>
+            </optgroup>
+          </select>
           <input type="hidden" id="fit-type" value="">
           <input type="text" id="fit-type-other" placeholder="Specify fitting type" style="margin-top:6px;display:none">
         </div>
@@ -2313,6 +2322,18 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
           <div style="font-size:12px;font-weight:700;color:#BF5AF2;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">👤 Assigned Supervisors</div>
           <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Only assigned supervisors can see and submit reports for this project. If none assigned, all supervisors can access it.</div>
           <div id="supervisorAssignList"></div>
+        </div>
+
+        <!-- Fitting Specials -->
+        <div style="background:rgba(90,200,250,0.07);border:1px solid rgba(90,200,250,0.25);border-radius:12px;padding:14px;margin-bottom:16px">
+          <div style="font-size:12px;font-weight:700;color:#5AC8FA;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">🔗 Fitting Specials</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Add special fitting types for this project. Supervisors will see these in the fitting form dropdown.</div>
+          <div id="specialsList" style="margin-bottom:10px"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input type="text" id="newSpecialInput" placeholder="e.g. Puddle Flange 600mm" style="flex:2;min-width:140px;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:13px">
+            <input type="number" id="newSpecialTotal" placeholder="Nos" min="0" style="flex:1;min-width:70px;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:13px;text-align:center">
+            <button onclick="addSpecialForProject()" style="padding:9px 16px;border-radius:10px;border:none;background:#5AC8FA;color:#1e1e28;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">＋ Add</button>
+          </div>
         </div>
 
         <!-- Existing routes list -->
@@ -2765,6 +2786,7 @@ function doLogin() {
         if (d.projects)    localStorage.setItem('aquatrack_projects',    JSON.stringify(d.projects));
         if (d.routes)      localStorage.setItem('aquatrack_routes',      JSON.stringify(d.routes));
         if (d.assignments) localStorage.setItem('aquatrack_assignments', JSON.stringify(d.assignments));
+        if (d.specials)     localStorage.setItem('aquatrack_specials',     JSON.stringify(d.specials));
         _doLoginSuccess(user);
       } else {
         alert('Incorrect username or password.');
@@ -2798,6 +2820,8 @@ async function _doLoginSuccess(user) {
             localStorage.setItem('aquatrack_routes', typeof d.routes === 'string' ? d.routes : JSON.stringify(d.routes));
           if (d.assignments)
             localStorage.setItem('aquatrack_assignments', JSON.stringify(d.assignments));
+          if (d.specials)
+            localStorage.setItem('aquatrack_specials', JSON.stringify(d.specials));
           if (d.users && Object.keys(d.users).length > 0) {
             const existing = getUsers();
             // Merge: Firebase is authoritative for supervisor list,
@@ -2935,7 +2959,7 @@ function initApp() {
   });
   document.querySelectorAll('.admin-settings-only').forEach(el => {
     const isTab = el.classList.contains('nav-tab');
-    el.style.display = currentRole === 'admin' ? (isTab ? 'flex' : 'block') : 'none';
+    el.style.display = (currentRole === 'admin' || currentRole === 'pm') ? (isTab ? 'flex' : 'block') : 'none';
   });
 
   updateDashboard();
@@ -2989,6 +3013,7 @@ function cancelForm() {
   try { clearValveEntries(); } catch(e){}
   try { document.getElementById('fit-qty').value = '1'; } catch(e){}
   try { document.getElementById('fit-type-other').style.display = 'none'; } catch(e){}
+  try { populateFitTypeDropdown(); } catch(e){}
   try { document.getElementById('precast-kept-wrap').style.display = 'none'; } catch(e){}
   try { document.getElementById('str-est-conc-display').textContent = '—'; } catch(e){}
   try { var d=document.getElementById('str-conc-diff'); d.innerHTML=''; d.style.display='none'; } catch(e){}
@@ -4069,11 +4094,56 @@ function selectThrustBlock(el, val) {
 }
 
 function selectFittingType(el, val) {
-  document.querySelectorAll('#fit-type-grid .radio-opt').forEach(e => e.classList.remove('selected'));
-  el.classList.add('selected');
+  // Legacy kept for safety
+  document.getElementById('fit-type').value = val;
+}
+
+function onFitTypeChange(sel) {
+  const val = sel.value;
   document.getElementById('fit-type').value = val;
   const other = document.getElementById('fit-type-other');
-  other.style.display = val === 'Other' ? 'block' : 'none';
+  if (other) other.style.display = val === 'Other' ? 'block' : 'none';
+}
+
+function populateFitTypeDropdown() {
+  const sel = document.getElementById('fit-type-select');
+  if (!sel) return;
+  const projEl = document.getElementById('fit-project');
+  const proj = projEl ? projEl.value : '';
+  const specials = proj ? getSpecialsForProject(proj) : [];
+
+  // Remove existing specials optgroup
+  const existing = sel.querySelector('optgroup[label="Specials"]');
+  if (existing) existing.remove();
+
+  // Add specials optgroup with remaining nos
+  if (specials.length > 0) {
+    const grp = document.createElement('optgroup');
+    grp.label = 'Specials';
+    specials.forEach(function(s) {
+      const opt = document.createElement('option');
+      opt.value = s.name;
+      const used = proj ? getSpecialUsedNos(proj, s.name) : 0;
+      const total = s.total || 0;
+      const remaining = total > 0 ? (total - used) : null;
+      const nosText = remaining !== null
+        ? (remaining <= 0 ? ' — ⚠️ All used (' + total + '/' + total + ')' : ' — ' + remaining + ' remaining / ' + total)
+        : '';
+      opt.textContent = '⭐ ' + s.name + nosText;
+      if (remaining !== null && remaining <= 0) {
+        opt.style.color = '#FF453A';
+        opt.disabled = true;
+      }
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  }
+
+  // Reset
+  sel.value = '';
+  document.getElementById('fit-type').value = '';
+  const other = document.getElementById('fit-type-other');
+  if (other) other.style.display = 'none';
 }
 
 function getGPSFor(prefix) {
@@ -4403,12 +4473,19 @@ function submitReport(type) {
     data.remarks   = document.getElementById('str-remarks').value;
   } else if (type === 'fitting') {
     var fitType = document.getElementById('fit-type').value;
+    if (!fitType) fitType = document.getElementById('fit-type-select') ? document.getElementById('fit-type-select').value : '';
     if (fitType === 'Other') fitType = document.getElementById('fit-type-other').value.trim() || 'Other';
     if (!fitType) { showToast('⚠️ Select fitting type'); return; }
     data.project  = document.getElementById('fit-project').value;
     data.route    = document.getElementById('fit-route').value;
     data.date     = document.getElementById('fit-date').value;
     data.fitType  = fitType;
+    // Save special name if a special was selected
+    const fitSelEl = document.getElementById('fit-type-select');
+    const selVal = fitSelEl ? fitSelEl.value : '';
+    const specList = data.project ? getSpecialsForProject(data.project) : [];
+    const isSpecial = specList.some(function(s){ return s.name === selVal; });
+    data.special = isSpecial ? selVal : null;
     data.chainage = parseFloat(document.getElementById('fit-chainage').value) || null;
     // Dependency: pipe laying must be done at this chainage
     if (data.chainage != null && data.route) {
@@ -4427,6 +4504,25 @@ function submitReport(type) {
     const fitPrevs = document.querySelectorAll('#fit-photo-prev img');
     if (fitPrevs.length) data.photos = Array.from(fitPrevs).map(i => i.src);
     if (!data.chainage) { showToast('⚠️ Enter chainage'); return; }
+
+    // Block if special nos exceeded
+    if (data.special && data.project) {
+      const spList = getSpecialsForProject(data.project);
+      const sp = spList.find(function(s){ return s.name === data.special; });
+      if (sp && sp.total > 0) {
+        const used = getSpecialUsedNos(data.project, data.special);
+        const qty  = parseInt(data.qty) || 1;
+        const remaining = sp.total - used;
+        if (remaining <= 0) {
+          showToast('🚫 ' + data.special + ': All ' + sp.total + ' nos already used. Cannot submit.');
+          return;
+        }
+        if (used + qty > sp.total) {
+          showToast('🚫 ' + data.special + ': Only ' + remaining + ' nos remaining, cannot submit ' + qty + '.');
+          return;
+        }
+      }
+    }
   }
 
   // Future date check
@@ -4781,6 +4877,41 @@ function updateDashboard() {
     }
   }
 
+  // ── ⑤ SPECIALS TRACKER ────────────────────────────────────────────────────
+  var specCard = document.getElementById('dashSpecialsCard');
+  var specList = document.getElementById('dashSpecialsList');
+  if (specCard && specList && (currentRole === 'admin' || currentRole === 'pm')) {
+    var allSpecials = [];
+    getVisibleProjects().forEach(function(proj) {
+      getSpecialsForProject(proj).forEach(function(s) {
+        const used = getSpecialUsedNos(proj, s.name);
+        const total = s.total || 0;
+        const remaining = total > 0 ? Math.max(0, total - used) : null;
+        const pct = total > 0 ? Math.min(100, Math.round(used / total * 100)) : 0;
+        allSpecials.push({ proj, s, used, total, remaining, pct });
+      });
+    });
+    if (allSpecials.length) {
+      specCard.style.display = 'block';
+      specList.innerHTML = allSpecials.map(function(item) {
+        const col = item.pct >= 100 ? '#FF453A' : item.pct >= 75 ? '#FF9F0A' : '#30D158';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">'
+          + '<div style="flex:1;min-width:0">'
+          +   '<div style="font-size:12px;font-weight:600;color:var(--text)">⭐ ' + item.s.name + '</div>'
+          +   '<div style="font-size:10px;color:var(--muted)">' + item.proj + '</div>'
+          + '</div>'
+          + '<div style="display:flex;gap:6px;align-items:center">'
+          +   '<span style="font-size:11px;color:var(--muted)">' + item.used + '/' + (item.total || '∞') + '</span>'
+          +   (item.remaining !== null ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:' + col + '22;color:' + col + '">' + (item.remaining <= 0 ? '⚠️ Done' : item.remaining + ' left') + '</span>' : '<span style="font-size:10px;color:var(--muted)">∞</span>')
+          + '</div>'
+          + (item.total > 0 ? '<div style="width:60px;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden"><div style="height:100%;width:' + item.pct + '%;background:' + col + ';border-radius:3px"></div></div>' : '')
+          + '</div>';
+      }).join('');
+    } else {
+      specCard.style.display = 'none';
+    }
+  }
+
   // ── ⑤ RECENT ACTIVITY (last 10, newest first) ────────────────────────────
   var recent = vis.slice().sort(function(a,b){
     var da=a.date||'', db=b.date||'';
@@ -4827,8 +4958,9 @@ function reportListItem(r) {
                    +(r.slab?' · '+r.slab+(r.slab==='Precast'&&r.slabKept?' ('+r.slabKept+')':''):'') };
         break;
       case 'fitting': {
+        const specialTag = r.special ? ' · ⭐ ' + r.special : '';
         t = { label:'Fitting', cls:'fitting', icon:'🔗',
-              info: (r.fitType||'Fitting') + (r.qty > 1 ? ' × '+r.qty : '') + (r.chainage ? ' · Ch:'+r.chainage+'m' : '') };
+              info: (r.fitType||'Fitting') + (r.qty > 1 ? ' × '+r.qty : '') + (r.chainage ? ' · Ch:'+r.chainage+'m' : '') + specialTag };
         break;
       }
       case 'structure': {
@@ -6134,10 +6266,11 @@ function exportPDF(mode) {
     const fitReps2 = reports.filter(r=>r.type==='fitting');
     if (fitReps2.length) {
       sectionsHTML += secHeader('🔗','Fittings', fitReps2.length, '', '#5AC8FA');
-      sectionsHTML += tblStart('#5AC8FA','#','Date','Chainage (m)','Fitting Type','Size','Thrust Block Required','Supervisor/Engineer');
+      sectionsHTML += tblStart('#5AC8FA','#','Date','Chainage (m)','Fitting Type','Special','Qty','Size','Thrust Block Required','Supervisor/Engineer');
       fitReps2.forEach((r,i) => {
         const tb = (r.thrustBlock&&r.thrustBlock!=='—'&&r.thrustBlock!=='Not Required') ? bdg('Required','orange') : bdg('Not Required','gray');
-        sectionsHTML += trow(i%2, i+1, r.date||'—', r.chainage?`${r.chainage}m`:'—', r.fitType||'—', r.size||'—', tb, r.supervisor||'—');
+        const sp = r.special ? `<span style="display:inline-block;padding:2px 7px;border-radius:8px;font-size:9px;font-weight:700;background:#fffbeb;color:#d97706">⭐ ${r.special}</span>` : '—';
+        sectionsHTML += trow(i%2, i+1, r.date||'—', r.chainage?`${r.chainage}m`:'—', r.fitType||'—', sp, r.qty||1, r.size||'—', tb, r.supervisor||'—');
       });
       sectionsHTML += `</tbody></table>`;
     }
@@ -6758,6 +6891,32 @@ function saveProjectAssignments(obj) {
   fbPushAdminData();
 }
 
+// ── PROJECT SPECIALS (fitting types per project) ─────────────────────────
+// Format: { 'ProjectName': ['Special A', 'Special B', ...], ... }
+function getProjectSpecials() {
+  const saved = localStorage.getItem('aquatrack_specials');
+  return saved ? JSON.parse(saved) : {};
+}
+function saveProjectSpecials(obj) {
+  localStorage.setItem('aquatrack_specials', JSON.stringify(obj));
+  fbPushAdminData();
+}
+function getSpecialsForProject(project) {
+  const raw = getProjectSpecials()[project] || [];
+  // Normalize: old format was ['name'], new format is [{name, total}]
+  return raw.map(function(s) {
+    return (typeof s === 'string') ? { name: s, total: 0 } : s;
+  });
+}
+
+// Get used nos for a special in a project
+function getSpecialUsedNos(project, specialName) {
+  const reports = getReports();
+  return reports.filter(function(r) {
+    return r.type === 'fitting' && r.project === project && r.special === specialName;
+  }).reduce(function(sum, r) { return sum + (parseInt(r.qty) || 1); }, 0);
+}
+
 // Returns projects the current user is allowed to see
 // Sync THIS supervisor's projects[] from assignments stored on this device
 async function syncSupervisorProjects(username) {
@@ -6872,12 +7031,13 @@ function getAdminRoutes() {
   return JSON.parse(localStorage.getItem('aquatrack_routes') || 'null') || buildDefaultRoutes();
 }
 function fbPushAdminData() {
-  if (!_db || currentRole !== 'admin') return; // PM is read-only
+  if (!_db || (currentRole !== 'admin' && currentRole !== 'pm')) return;
   try {
     const data = {
       projects:    getProjects(),
       routes:      getAdminRoutes(),
       assignments: getProjectAssignments(),
+      specials:    getProjectSpecials(),
       users:       getUsers(),
       updatedAt:   Date.now()
     };
@@ -7433,9 +7593,9 @@ function doSwitchProject(idx) {
   renderKmzStatus();
   renderRouteAdmin();
   renderSupervisorAssign();
+  renderSpecialsList();
 }
 function doDeleteProject(idx) {
-  if (currentRole !== 'admin') { showToast('Admin only'); return; }
   const projects = getProjects();
   if (projects.length <= 1) { showToast('Cannot delete last project'); return; }
   const name = projects[idx];
@@ -7477,6 +7637,68 @@ function populateAllProjectDropdowns() {
   });
 }
 
+function renderSpecialsList() {
+  const el = document.getElementById('specialsList');
+  if (!el) return;
+  const proj = settingsActiveProject;
+  if (!proj) { el.innerHTML = '<div style="font-size:11px;color:var(--muted)">No project selected.</div>'; return; }
+  const specials = getSpecialsForProject(proj);
+  if (!specials.length) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:4px 0">No specials added yet.</div>';
+    return;
+  }
+  el.innerHTML = specials.map(function(s, i) {
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:6px">'
+      + '<span style="font-size:12px;flex:1;color:var(--text)">🔗 ' + s + '</span>'
+      + '<button onclick="deleteSpecial(' + i + ')" style="background:rgba(255,69,58,0.12);border:1px solid rgba(255,69,58,0.3);border-radius:8px;padding:3px 9px;color:#FF453A;font-size:11px;font-family:inherit;cursor:pointer">✕</button>'
+      + '</div>';
+  }).join('');
+}
+
+function addSpecialForProject() {
+  const nameInput  = document.getElementById('newSpecialInput');
+  const totalInput = document.getElementById('newSpecialTotal');
+  const val   = nameInput  ? nameInput.value.trim()  : '';
+  const total = totalInput ? parseInt(totalInput.value) || 0 : 0;
+  if (!val) { showToast('⚠️ Enter a special name'); return; }
+  const proj = settingsActiveProject;
+  if (!proj) { showToast('⚠️ Select a project first'); return; }
+  const all = getProjectSpecials();
+  if (!all[proj]) all[proj] = [];
+  const norm = getSpecialsForProject(proj);
+  if (norm.some(function(s){ return s.name === val; })) { showToast('Already exists'); return; }
+  all[proj].push({ name: val, total: total });
+  saveProjectSpecials(all);
+  if (nameInput)  nameInput.value = '';
+  if (totalInput) totalInput.value = '';
+  renderSpecialsList();
+  showToast('✅ Special added: ' + val + (total ? ' (' + total + ' nos)' : ''));
+}
+
+function updateSpecialTotal(idx, value) {
+  const proj = settingsActiveProject;
+  if (!proj) return;
+  const all = getProjectSpecials();
+  if (!all[proj] || !all[proj][idx]) return;
+  const s = all[proj][idx];
+  all[proj][idx] = (typeof s === 'string') ? { name: s, total: parseInt(value) || 0 } : { ...s, total: parseInt(value) || 0 };
+  saveProjectSpecials(all);
+  renderSpecialsList();
+}
+
+function deleteSpecial(idx) {
+  const proj = settingsActiveProject;
+  if (!proj) return;
+  const all = getProjectSpecials();
+  if (!all[proj]) return;
+  const s = all[proj][idx];
+  const name = (typeof s === 'string') ? s : s.name;
+  all[proj].splice(idx, 1);
+  saveProjectSpecials(all);
+  renderSpecialsList();
+  showToast('Removed: ' + name);
+}
+
 function initSettings() {
   if (!settingsActiveProject || !getProjects().includes(settingsActiveProject))
     settingsActiveProject = getProjects()[0];
@@ -7486,6 +7708,7 @@ function initSettings() {
   renderRouteAdmin();
   renderColorPicker();
   renderSupervisorAssign();
+  renderSpecialsList();
   renderSupervisorAccounts();
   // Update backup panel
   const countEl = document.getElementById('backup-report-count');
