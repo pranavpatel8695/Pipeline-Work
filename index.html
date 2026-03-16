@@ -6213,10 +6213,12 @@ function exportPDF(mode) {
     const excReps2 = reports.filter(r=>r.type==='excavation');
     if (excReps2.length) {
       const totM = excReps2.reduce((s,r)=>s+(r.meters||0),0);
-      const totV = excReps.reduce((s,r)=>s+(parseFloat(r.volume)||0),0);
-      sectionsHTML += secHeader('⛏️','Excavation', excReps.length, `Total: ${fmtM(totM)} &nbsp;|&nbsp; Vol: ${totV.toFixed(2)} cum`, '#FF9F0A');
+      const totV = excReps2.reduce((s,r)=>s+(parseFloat(r.volume)||0),0);
+      sectionsHTML += secHeader('⛏️','Excavation', excReps2.length, `Total: ${fmtM(totM)} &nbsp;|&nbsp; Vol: ${totV.toFixed(2)} cum`, '#FF9F0A');
       sectionsHTML += tblStart('#FF9F0A','#','Date','Chainage (From–To)','Length','Qty (cum)','Width (m)','Depth (m)','Soil Type','Supervisor/Engineer');
-      excReps2.forEach((r,i) => { sectionsHTML += trow(i%2, i+1, r.date||'—', `${r.from||0}m – ${r.to||0}m`, fmtM(r.meters), parseFloat(r.volume||0).toFixed(2), r.width||'—', r.depth||'—', r.soil||'—', r.supervisor||'—'); });
+      excReps2.forEach((r,i) => {
+        sectionsHTML += trow(i%2, i+1, r.date||'—', `${r.from||0}m – ${r.to||0}m`, fmtM(r.meters), parseFloat(r.volume||0).toFixed(2), r.width||'—', r.depth||'—', r.soil||'—', r.supervisor||'—');
+      });
       sectionsHTML += `</tbody></table>`;
     }
 
@@ -6224,12 +6226,12 @@ function exportPDF(mode) {
     const pipeReps2 = reports.filter(r=>r.type==='pipe');
     if (pipeReps2.length) {
       const totM = pipeReps2.reduce((s,r)=>s+(r.meters||0),0);
-      sectionsHTML += secHeader('🔩','Pipe Laying', pipeReps.length, `Total: ${fmtM(totM)}`, '#0A84FF');
+      sectionsHTML += secHeader('🔩','Pipe Laying', pipeReps2.length, `Total: ${fmtM(totM)}`, '#0A84FF');
       sectionsHTML += tblStart('#0A84FF','#','Date','Chainage (From–To)','Length','Size & Material','CC/RCC Encasing','Encasing Chainage','Supervisor/Engineer');
       pipeReps2.forEach((r,i) => {
         const eList = r.encasings&&r.encasings.length ? r.encasings.filter(e=>e.type&&e.type!=='Not Required').map(e=>e.type.replace(' Required','')).filter((v,j,a)=>a.indexOf(v)===j).join(', ') : (r.encasing&&r.encasing!=='Not Required'?r.encasing.replace(' Required',''):'');
-        const eCh   = r.encasings&&r.encasings.length ? r.encasings.filter(e=>e.type&&e.type!=='Not Required').map(e=>`${e.from}m–${e.to}m`).join(', ') : '—';
-        const enc   = eList ? bdg(eList, eList.includes('RCC')?'blue':'orange') : bdg('Not Required','gray');
+        const eCh = r.encasings&&r.encasings.length ? r.encasings.filter(e=>e.type&&e.type!=='Not Required').map(e=>`${e.from}m–${e.to}m`).join(', ') : '—';
+        const enc = eList ? bdg(eList, eList.includes('RCC')?'blue':'orange') : bdg('Not Required','gray');
         sectionsHTML += trow(i%2, i+1, r.date||'—', `${r.from||0}m – ${r.to||0}m`, fmtM(r.meters), `${r.size||'-'} ${r.material||''}`.trim(), enc, eCh||'—', r.supervisor||'—');
       });
       sectionsHTML += `</tbody></table>`;
@@ -6238,11 +6240,13 @@ function exportPDF(mode) {
     // ── REFILLING ───────────────────────────────────────────────────────────
     const refReps2 = reports.filter(r=>r.type==='refill');
     if (refReps2.length) {
-      const totM  = refReps2.reduce((s,r)=>s+(r.meters||0),0);
-      const netV  = refReps2.reduce((s,r)=>s+(parseFloat(r.netVol||r.volume)||0),0);
-      sectionsHTML += secHeader('🪣','Refilling', refReps.length, `Total: ${fmtM(totM)} &nbsp;|&nbsp; Net Vol: ${netV.toFixed(2)} cum`, '#30D158');
+      const totM = refReps2.reduce((s,r)=>s+(r.meters||0),0);
+      const netV = refReps2.reduce((s,r)=>s+(parseFloat(r.netVol||r.volume)||0),0);
+      sectionsHTML += secHeader('🪣','Refilling', refReps2.length, `Total: ${fmtM(totM)} &nbsp;|&nbsp; Net Vol: ${netV.toFixed(2)} cum`, '#30D158');
       sectionsHTML += tblStart('#30D158','#','Date','Chainage (From–To)','Length','Gross Qty (cum)','Net Qty (cum)','Width (m)','Depth (m)','Road Restoration','Supervisor/Engineer');
-      refReps2.forEach((r,i) => { sectionsHTML += trow(i%2, i+1, r.date||'—', `${r.from||0}m – ${r.to||0}m`, fmtM(r.meters), parseFloat(r.volume||0).toFixed(2), parseFloat(r.netVol||r.volume||0).toFixed(2), r.width||'—', r.depth||'—', r.road||'—', r.supervisor||'—'); });
+      refReps2.forEach((r,i) => {
+        sectionsHTML += trow(i%2, i+1, r.date||'—', `${r.from||0}m – ${r.to||0}m`, fmtM(r.meters), parseFloat(r.volume||0).toFixed(2), parseFloat(r.netVol||r.volume||0).toFixed(2), r.width||'—', r.depth||'—', r.road||'—', r.supervisor||'—');
+      });
       sectionsHTML += `</tbody></table>`;
     }
 
@@ -6253,7 +6257,13 @@ function exportPDF(mode) {
       sectionsHTML += tblStart('#FF453A','#','Date','Chainage (m)','Valve Type','Size','Depth (m)','Chamber Required','Supervisor/Engineer');
       valReps2.forEach((r,i) => {
         const chReq = (r.chamberReq&&r.chamberReq!=='—'&&r.chamberReq!=='Not Required') ? bdg('Required','orange') : bdg('Not Required','gray');
-        sectionsHTML += trow(i%2, i+1, r.date||'—', r.chainage?`${r.chainage}m`:'—', r.valType||'—', r.size||'—', r.depth||'—', chReq, r.supervisor||'—');
+        if (r.valves&&r.valves.length>1) {
+          r.valves.forEach((v,vi) => {
+            sectionsHTML += trow(i%2, vi===0?i+1:'', vi===0?r.date||'—':'', vi===0?(r.chainage?`${r.chainage}m`:'—'):'', v.valType||'—', v.size||'—', v.depth||'—', vi===0?chReq:'', vi===0?r.supervisor||'—':'');
+          });
+        } else {
+          sectionsHTML += trow(i%2, i+1, r.date||'—', r.chainage?`${r.chainage}m`:'—', r.valType||'—', r.size||'—', r.depth||'—', chReq, r.supervisor||'—');
+        }
       });
       sectionsHTML += `</tbody></table>`;
     }
@@ -6265,7 +6275,7 @@ function exportPDF(mode) {
       sectionsHTML += tblStart('#FF9500','#','Date','Chainage (m)','Chamber Type','Size (L×W×H)','Slab Type','Precast Kept','Status','Supervisor/Engineer');
       chamReps2.forEach((r,i) => {
         const kept = r.slab==='Precast' ? (r.slabKept==='Kept'?bdg('Kept','green'):bdg(r.slabKept||'—','orange')) : '—';
-        const st   = r.chamStatus||'Complete';
+        const st = r.chamStatus||'Complete';
         sectionsHTML += trow(i%2, i+1, r.date||'—', r.chainage?`${r.chainage}m`:'—', r.chamType||'—', `${r.length||'-'}×${r.width||'-'}×${r.height||'-'} m`, r.slab||'—', kept, bdg(st, st==='Complete'?'green':st==='Partial'?'orange':'gray'), r.supervisor||'—');
       });
       sectionsHTML += `</tbody></table>`;
@@ -6274,7 +6284,45 @@ function exportPDF(mode) {
     // ── FITTINGS ────────────────────────────────────────────────────────────
     const fitReps2 = reports.filter(r=>r.type==='fitting');
     if (fitReps2.length) {
-      sectionsHTML += secHeader('🔗','Fittings', fitReps2.length, '', '#5AC8FA');
+      const totalFitQty = fitReps2.reduce((s,r)=>s+(parseInt(r.qty)||1),0);
+
+      // Build specials stock summary for this project
+      const projSpecials = getSpecialsForProject(project);
+      let specialsSummary = '';
+      if (projSpecials.length) {
+        specialsSummary = `<table style="width:100%;border-collapse:collapse;font-size:10.5px;margin-bottom:6px">
+          <thead><tr>
+            <th style="padding:6px 10px;background:#0e7490;color:#fff;font-size:10px;border:1px solid rgba(255,255,255,0.2);text-align:left">⭐ Special</th>
+            <th style="padding:6px 10px;background:#0e7490;color:#fff;font-size:10px;border:1px solid rgba(255,255,255,0.2);text-align:center">Total (nos)</th>
+            <th style="padding:6px 10px;background:#0e7490;color:#fff;font-size:10px;border:1px solid rgba(255,255,255,0.2);text-align:center">Used (nos)</th>
+            <th style="padding:6px 10px;background:#0e7490;color:#fff;font-size:10px;border:1px solid rgba(255,255,255,0.2);text-align:center">Left (nos)</th>
+            <th style="padding:6px 10px;background:#0e7490;color:#fff;font-size:10px;border:1px solid rgba(255,255,255,0.2);text-align:left">Status</th>
+          </tr></thead><tbody>`;
+        projSpecials.forEach(function(s, si) {
+          const used      = getSpecialUsedNos(project, s.name);
+          const total     = s.total || 0;
+          const left      = total > 0 ? Math.max(0, total - used) : null;
+          const pct       = total > 0 ? Math.min(100, Math.round(used/total*100)) : 0;
+          const stColor   = pct>=100 ? '#FF453A' : pct>=75 ? '#FF9F0A' : '#30D158';
+          const stLabel   = pct>=100 ? 'All Used' : pct>=75 ? 'Low Stock' : 'In Stock';
+          const stBg      = pct>=100 ? '#fef2f2' : pct>=75 ? '#fff7ed' : '#f0fdf4';
+          const bg        = si%2===0 ? '#f0f9ff' : '#e0f2fe';
+          specialsSummary += `<tr style="background:${bg}">
+            <td style="padding:5px 10px;border:1px solid #e0e0e0;font-weight:600">⭐ ${s.name}</td>
+            <td style="padding:5px 10px;border:1px solid #e0e0e0;text-align:center;font-weight:700">${total||'—'}</td>
+            <td style="padding:5px 10px;border:1px solid #e0e0e0;text-align:center;color:#0A84FF;font-weight:700">${used}</td>
+            <td style="padding:5px 10px;border:1px solid #e0e0e0;text-align:center;color:${stColor};font-weight:700">${left!==null?left:'∞'}</td>
+            <td style="padding:5px 10px;border:1px solid #e0e0e0"><span style="display:inline-block;padding:2px 8px;border-radius:8px;font-size:9px;font-weight:700;background:${stBg};color:${stColor}">${stLabel}</span></td>
+          </tr>`;
+        });
+        specialsSummary += `</tbody></table>`;
+      }
+
+      sectionsHTML += secHeader('🔗','Fittings', fitReps2.length, `Total Qty Used: ${totalFitQty} nos`, '#5AC8FA');
+      if (specialsSummary) {
+        sectionsHTML += `<div style="padding:10px;background:#f0f9ff;border:1px solid #bae6fd;border-top:none;font-size:11px;font-weight:700;color:#0369a1;margin-bottom:2px">📦 Specials Stock Summary</div>`;
+        sectionsHTML += specialsSummary;
+      }
       sectionsHTML += tblStart('#5AC8FA','#','Date','Chainage (m)','Fitting Type','Special','Qty','Size','Thrust Block Required','Supervisor/Engineer');
       fitReps2.forEach((r,i) => {
         const tb = (r.thrustBlock&&r.thrustBlock!=='—'&&r.thrustBlock!=='Not Required') ? bdg('Required','orange') : bdg('Not Required','gray');
@@ -6287,17 +6335,19 @@ function exportPDF(mode) {
     // ── CONCRETE WORK ────────────────────────────────────────────────────────
     const strReps2 = reports.filter(r=>r.type==='structure');
     if (strReps2.length) {
+      const totEst = strReps2.reduce((s,r)=>s+(parseFloat(r.estConc)||0),0);
       const totAct = strReps2.reduce((s,r)=>s+(parseFloat(r.actualConc)||0),0);
-      sectionsHTML += secHeader('🏗️','Concrete Work', strReps2.length, `Total Actual: ${totAct.toFixed(2)} cum`, '#BF5AF2');
+      sectionsHTML += secHeader('🏗️','Concrete Work', strReps2.length, `Est: ${totEst.toFixed(2)} cum &nbsp;|&nbsp; Actual: ${totAct.toFixed(2)} cum`, '#BF5AF2');
       sectionsHTML += tblStart('#BF5AF2','#','Date','Chainage','Type','Est. Qty (cum)','Actual Qty (cum)','Status','Supervisor/Engineer');
       strReps2.forEach((r,i) => {
         const st = r.strStatus||r.workStatus||'In Progress';
-        sectionsHTML += trow(i%2, i+1, r.date||'—', r.chainage||'—', r.strType||'—', parseFloat(r.estConc||0).toFixed(2), parseFloat(r.actualConc||0).toFixed(2), bdg(st, st==='Completed'?'green':'orange'), r.supervisor||'—');
+        const ch = r.from!=null&&r.to!=null ? `${r.from}m – ${r.to}m` : r.chainage ? `${r.chainage}m` : '—';
+        sectionsHTML += trow(i%2, i+1, r.date||'—', ch, r.strType||'—', parseFloat(r.estConc||0).toFixed(2), parseFloat(r.actualConc||0).toFixed(2), bdg(st, st==='Completed'?'green':'orange'), r.supervisor||'—');
       });
       sectionsHTML += `</tbody></table>`;
     }
 
-    if (sectionsHTML) {
+        if (sectionsHTML) {
       bodyHTML += sectionsHTML;
     } else {
       bodyHTML += `<div style="text-align:center;color:#888;padding:40px">No reports found for this date range.</div>`;
