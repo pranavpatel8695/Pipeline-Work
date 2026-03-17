@@ -2305,10 +2305,10 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
       <div class="card pm-specials-card" style="margin-bottom:12px">
         <div class="card-title">🔗 Fitting Specials</div>
         <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Add special fitting types for this project. Supervisors will see these in the fitting form dropdown.</p>
-        <div id="specialsListPM" style="margin-bottom:10px"></div>
+        <div id="specialsList" style="margin-bottom:10px"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <input type="text" id="newSpecialInputPM" placeholder="e.g. Puddle Flange 600mm" style="flex:2;min-width:140px;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:13px">
-          <input type="number" id="newSpecialTotalPM" placeholder="Nos" min="0" style="flex:1;min-width:70px;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:13px;text-align:center">
+          <input type="text" id="newSpecialInput" placeholder="e.g. Puddle Flange 600mm" style="flex:2;min-width:140px;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:13px">
+          <input type="number" id="newSpecialTotal" placeholder="Nos" min="0" style="flex:1;min-width:70px;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:13px;text-align:center">
           <button onclick="addSpecialForProject()" style="padding:9px 16px;border-radius:10px;border:none;background:#5AC8FA;color:#1e1e28;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">＋ Add</button>
         </div>
       </div>
@@ -2324,18 +2324,6 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
           <div style="font-size:12px;font-weight:700;color:#BF5AF2;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">👤 Assigned Supervisors</div>
           <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Only assigned supervisors can see and submit reports for this project. If none assigned, all supervisors can access it.</div>
           <div id="supervisorAssignList"></div>
-        </div>
-
-        <!-- Fitting Specials -->
-        <div style="background:rgba(90,200,250,0.07);border:1px solid rgba(90,200,250,0.25);border-radius:12px;padding:14px;margin-bottom:16px">
-          <div style="font-size:12px;font-weight:700;color:#5AC8FA;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">🔗 Fitting Specials</div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Add special fitting types for this project. Supervisors will see these in the fitting form dropdown.</div>
-          <div id="specialsList" style="margin-bottom:10px"></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <input type="text" id="newSpecialInput" placeholder="e.g. Puddle Flange 600mm" style="flex:2;min-width:140px;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:13px">
-            <input type="number" id="newSpecialTotal" placeholder="Nos" min="0" style="flex:1;min-width:70px;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:13px;text-align:center">
-            <button onclick="addSpecialForProject()" style="padding:9px 16px;border-radius:10px;border:none;background:#5AC8FA;color:#1e1e28;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">＋ Add</button>
-          </div>
         </div>
 
         <!-- Existing routes list -->
@@ -6068,172 +6056,66 @@ function exportPDF(mode) {
 
   let bodyHTML = '';
 
-  if (mode === 'daily' || mode === 'range') {
+  if (mode === 'daily' || mode === 'range' || mode === 'grouped') {
     const reports = allReports.filter(r => {
       if (r.project !== selectedProject) return false;
       const d = r.date || (r.timestamp||'').slice(0,10);
       return d >= dateFrom && d <= dateTo;
     });
-    const supervisors = [...new Set(reports.map(r=>r.supervisor))].join(', ') || '-';
+    const supervisors = [...new Set(reports.map(r=>r.supervisor))].filter(Boolean).join(', ') || '—';
+    const project = selectedProject;
 
     const excM  = reports.filter(r=>r.type==='excavation').reduce((s,r)=>s+(r.meters||0),0);
     const pipeM = reports.filter(r=>r.type==='pipe').reduce((s,r)=>s+(r.meters||0),0);
     const refM  = reports.filter(r=>r.type==='refill').reduce((s,r)=>s+(r.meters||0),0);
     const valC  = reports.filter(r=>r.type==='valve').length;
-  const chamC_all1 = reports.filter(r=>r.type==='chamber').length;
+    const chamC = reports.filter(r=>r.type==='chamber').length;
     const strC  = reports.filter(r=>r.type==='structure').length;
+    const fitC  = reports.filter(r=>r.type==='fitting').length;
 
     const dateLabel = dateFrom === dateTo ? dateFrom : dateFrom + ' → ' + dateTo;
     bodyHTML += pageHeader('Progress Report', `${selectedProject} | ${dateLabel}`);
-    bodyHTML += `<div style="padding:0 24px">`;
-    bodyHTML += `<div style="color:#888;font-size:11px;margin-bottom:16px">Generated: ${new Date().toLocaleString('en-IN')} &nbsp;|&nbsp; Total Reports: ${reports.length} &nbsp;|&nbsp; Supervisor(s): ${supervisors}</div>`;
+    bodyHTML += `<div style="padding:0 20px 20px">`;
+    bodyHTML += `<div style="color:#888;font-size:11px;margin-bottom:14px;border-bottom:1px solid #eee;padding-bottom:10px">Generated: ${new Date().toLocaleString('en-IN')} &nbsp;|&nbsp; Total Reports: ${reports.length} &nbsp;|&nbsp; Supervisor(s): ${supervisors}</div>`;
 
-    bodyHTML += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+    // Stats row
+    bodyHTML += `<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px">
       ${statBox('Excavation', fmtM(excM), TYPE_COLORS.excavation)}
       ${statBox('Pipe Laying', fmtM(pipeM), TYPE_COLORS.pipe)}
       ${statBox('Refilling', fmtM(refM), TYPE_COLORS.refill)}
       ${statBox('Valves', valC, TYPE_COLORS.valve)}
-      ${statBox('Chambers', chamC_all1, '#FF9500')}
-      ${statBox('Concrete Work', strC, TYPE_COLORS.structure)}
+      ${statBox('Chambers', chamC, '#FF9500')}
+      ${statBox('Concrete', strC, TYPE_COLORS.structure)}
+      ${statBox('Fittings', fitC, '#5AC8FA')}
     </div>`;
 
-    const typeConfigs = [
-      { key:'excavation', label:'Excavation',
-        cols:['Route','Chainage (From-To)','Length','Qty (cum)','Soil Type','Supervisor'],
-        row: r => [r.route||'-', (r.from||0)+'m – '+(r.to||0)+'m', fmtM(r.meters), parseFloat(r.volume||0).toFixed(2)+' cum', r.soil||'-', r.supervisor] },
-      { key:'pipe', label:'Pipe Laying',
-        cols:['Route','Chainage (From-To)','Length','Size & Material','CC/RCC Encasing','Encasing Chainage','Supervisor'],
-        row: r => {
-          const encList = r.encasings && r.encasings.length
-            ? r.encasings.filter(e=>e.type&&e.type!=='Not Required')
-                .map(e=>e.type.replace(' Required',''))
-                .filter((v,i,a)=>a.indexOf(v)===i).join(', ') || 'Not Required'
-            : (r.encasing && r.encasing!=='Not Required' ? r.encasing.replace(' Required','') : 'Not Required');
-          const encCh = r.encasings && r.encasings.length
-            ? r.encasings.filter(e=>e.type&&e.type!=='Not Required')
-                .map(e=>e.from+'m–'+e.to+'m').join(', ') || '-'
-            : '-';
-          return [r.route||'-', (r.from||0)+'m – '+(r.to||0)+'m', fmtM(r.meters), (r.size||'-')+' '+(r.material||''), encList, encCh, r.supervisor];
-        } },
-      { key:'refill', label:'Refilling',
-        cols:['Route','Chainage (From-To)','Length','Gross Qty (cum)','Net Qty (cum)','Road Restoration','Supervisor'],
-        row: r => [r.route||'-', (r.from||0)+'m – '+(r.to||0)+'m', fmtM(r.meters), parseFloat(r.volume||0).toFixed(3)+' cum', parseFloat(r.netVol||r.volume||0).toFixed(3)+' cum', r.road||'-', r.supervisor] },
-      { key:'valve', label:'Valves',
-        cols:['Type','Size','Chainage (m)','Depth (m)','Chamber Required','Supervisor'],
-        row: r => [r.valType||'-', r.size||'-', r.chainage||'-', r.depth||'-', r.chamberReq||'-', r.supervisor] },
-      { key:'chamber', label:'Chambers',
-        cols:['Type','Chainage (m)','Size (L×W×H)','Slab Type','Precast Kept','Status','Supervisor'],
-        row: r => [r.chamType||'-', r.chainage||'-', (r.length||'-')+'×'+(r.width||'-')+'×'+(r.height||'-')+' m', r.slab||'-', r.slabKept||'-', r.chamStatus||'Complete', r.supervisor] },
-      { key:'fitting', label:'Fittings',
-        cols:['Type','Chainage (m)','Size','Thrust Block Required','Supervisor'],
-        row: r => [r.fitType||'-', r.chainage||'-', r.size||'-', r.thrustBlock||'-', r.supervisor] },
-      { key:'structure', label:'Concrete Work',
-        cols:['Type','Chainage (m)','Est Qty (cum)','Actual Qty (cum)','Status','Supervisor'],
-        row: r => [r.strType||'-', r.chainage||'-', parseFloat(r.estConc||0).toFixed(2)+' cum', parseFloat(r.actualConc||0).toFixed(2)+' cum', r.strStatus||'In Progress', r.supervisor] },
-    ];
+    let sectionsHTML = '';
 
-    // ── SUMMARY TOTALS SECTION ─────────────────────────────────────────────
-    const excReps  = reports.filter(r=>r.type==='excavation');
-    const pipeReps = reports.filter(r=>r.type==='pipe');
-    const refReps  = reports.filter(r=>r.type==='refill');
-    const chamReps = reports.filter(r=>r.type==='chamber');
-    const strReps  = reports.filter(r=>r.type==='structure');
-
-    // Excavation totals
-    const excTotalM   = excReps.reduce((s,r)=>s+(r.meters||0),0);
-    const excTotalVol = excReps.reduce((s,r)=>s+(parseFloat(r.volume)||0),0);
-    // Pipe totals
-    const pipeTotalM  = pipeReps.reduce((s,r)=>s+(r.meters||0),0);
-    // Refill totals
-    const refTotalM   = refReps.reduce((s,r)=>s+(r.meters||0),0);
-    // Chamber totals
-    const chamComplete   = chamReps.filter(r=>(r.chamStatus||'Complete')==='Complete').length;
-    const chamPartial    = chamReps.filter(r=>r.chamStatus==='Partial').length;
-    const chamIncomplete = chamReps.filter(r=>r.chamStatus==='Incomplete').length;
-    // Concrete totals
-    const ccVol  = strReps.filter(r=>r.strType==='CC Encasing').reduce((s,r)=>s+(parseFloat(r.actualConc)||0),0);
-    const rccVol = strReps.filter(r=>r.strType==='RCC Encasing').reduce((s,r)=>s+(parseFloat(r.actualConc)||0),0);
-    const tbVol  = strReps.filter(r=>r.strType==='Thrust Block').reduce((s,r)=>s+(parseFloat(r.actualConc)||0),0);
-    const ccCnt  = strReps.filter(r=>r.strType==='CC Encasing').length;
-    const rccCnt = strReps.filter(r=>r.strType==='RCC Encasing').length;
-    const tbCnt  = strReps.filter(r=>r.strType==='Thrust Block').length;
-
-    bodyHTML += sectionTitle('📊 Summary Totals', '#1e1e28');
-    bodyHTML += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">`;
-
-    if (excReps.length) bodyHTML += `<div style="background:#fff7e6;border:1px solid #FF9F0A;border-radius:8px;padding:10px 12px">
-      <div style="font-size:11px;font-weight:700;color:#FF9F0A;margin-bottom:6px">⛏️ EXCAVATION</div>
-      <div style="font-size:12px">Total Length: <b>${fmtM(excTotalM)}</b></div>
-      <div style="font-size:12px">Total Volume: <b>${excTotalVol.toFixed(2)} m³</b></div>
-      <div style="font-size:11px;color:#888;margin-top:2px">${excReps.length} records</div>
-    </div>`;
-
-    if (pipeReps.length) bodyHTML += `<div style="background:#e8f4ff;border:1px solid #0A84FF;border-radius:8px;padding:10px 12px">
-      <div style="font-size:11px;font-weight:700;color:#0A84FF;margin-bottom:6px">🔩 PIPE LAYING</div>
-      <div style="font-size:12px">Total Length: <b>${fmtM(pipeTotalM)}</b></div>
-      <div style="font-size:11px;color:#888;margin-top:2px">${pipeReps.length} records</div>
-    </div>`;
-
-    const refGrossVol = refReps.reduce((s,r)=>s+(parseFloat(r.volume)||0),0);
-    const refNetVol   = refReps.reduce((s,r)=>s+(parseFloat(r.netVol||r.volume)||0),0);
-    if (refReps.length) bodyHTML += `<div style="background:#e8fff0;border:1px solid #30D158;border-radius:8px;padding:10px 12px">
-      <div style="font-size:11px;font-weight:700;color:#30D158;margin-bottom:6px">🪣 REFILLING</div>
-      <div style="font-size:12px">Total Length: <b>${fmtM(refTotalM)}</b></div>
-      <div style="font-size:12px">Gross Volume: <b>${refGrossVol.toFixed(3)} cum</b></div>
-      <div style="font-size:12px">Net Refilling Qty: <b>${refNetVol.toFixed(3)} cum</b></div>
-      <div style="font-size:11px;color:#888;margin-top:2px">${refReps.length} records</div>
-    </div>`;
-
-    if (chamReps.length) bodyHTML += `<div style="background:#fff3e0;border:1px solid #FF9500;border-radius:8px;padding:10px 12px">
-      <div style="font-size:11px;font-weight:700;color:#FF9500;margin-bottom:6px">🏛️ CHAMBERS</div>
-      <div style="font-size:12px">✅ Complete: <b>${chamComplete}</b></div>
-      <div style="font-size:12px">⚡ Partial: <b>${chamPartial}</b></div>
-      <div style="font-size:12px">⏳ Incomplete: <b>${chamIncomplete}</b></div>
-      <div style="font-size:11px;color:#888;margin-top:2px">Total: ${chamReps.length}</div>
-    </div>`;
-
-    if (strReps.length) bodyHTML += `<div style="background:#f3e8ff;border:1px solid #BF5AF2;border-radius:8px;padding:10px 12px;grid-column:1/-1">
-      <div style="font-size:11px;font-weight:700;color:#BF5AF2;margin-bottom:6px">🏗️ CONCRETE WORK</div>
-      <div style="display:flex;gap:16px;flex-wrap:wrap">
-        <div><div style="font-size:11px;color:#666">CC Encasing</div><div style="font-size:12px"><b>${fmtM(ccVol)} (${ccCnt} nos)</b></div></div>
-        <div><div style="font-size:11px;color:#666">RCC Encasing</div><div style="font-size:12px"><b>${fmtM(rccVol)} (${rccCnt} nos)</b></div></div>
-        <div><div style="font-size:11px;color:#666">Thrust Block</div><div style="font-size:12px"><b>${fmtM(tbVol)} (${tbCnt} nos)</b></div></div>
-      </div>
-    </div>`;
-
-    bodyHTML += `</div>`;
-
-    // ── GROUPED SECTIONS, EACH WITH OWN COLUMNS ──────────────────────────────
     function secHeader(icon, label, count, extra, color) {
       return `<div style="background:${color};color:#fff;padding:8px 14px;border-radius:6px 6px 0 0;font-size:12px;font-weight:700;margin-top:18px">
         ${icon} ${label} <span style="font-weight:400;font-size:10px;opacity:0.85">— ${count} records${extra?` &nbsp;|&nbsp; ${extra}`:''}</span>
       </div>`;
     }
-
     function tblStart(color, ...cols) {
-      const ths = cols.map(c=>`<th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;color:#fff;background:${color};border:1px solid rgba(255,255,255,0.2);white-space:nowrap">${c}</th>`).join('');
-      return `<table style="width:100%;border-collapse:collapse;font-size:10.5px;margin-bottom:4px"><thead><tr>${ths}</tr></thead><tbody>`;
+      const ths = cols.map(c=>`<th style="padding:7px 8px;text-align:left;font-size:9.5px;font-weight:700;color:#fff;background:${color};border:1px solid rgba(255,255,255,0.2);white-space:nowrap">${c}</th>`).join('');
+      return `<table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:4px"><thead><tr>${ths}</tr></thead><tbody>`;
     }
-
     function trow(even, ...cells) {
       const bg = even ? '#f8f9fc' : '#fff';
-      const tds = cells.map(c=>`<td style="padding:6px 10px;border:1px solid #e8e8e8;vertical-align:middle;line-height:1.5;font-size:10.5px">${c??'—'}</td>`).join('');
+      const tds = cells.map(c=>`<td style="padding:5px 8px;border:1px solid #e8e8e8;vertical-align:middle;line-height:1.4;font-size:10px">${c??'—'}</td>`).join('');
       return `<tr style="background:${bg}">${tds}</tr>`;
     }
-
     function bdg(text, style) {
       const s={green:'background:#dcfce7;color:#16a34a',orange:'background:#fff7ed;color:#ea580c',blue:'background:#eff6ff;color:#2563eb',gray:'background:#f1f5f9;color:#475569'};
-      return `<span style="display:inline-block;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700;${s[style]||s.gray}">${text}</span>`;
+      return `<span style="display:inline-block;padding:2px 6px;border-radius:8px;font-size:8.5px;font-weight:700;${s[style]||s.gray}">${text}</span>`;
     }
-
-    let sectionsHTML = '';
 
     // ── EXCAVATION ──────────────────────────────────────────────────────────
     const excReps2 = reports.filter(r=>r.type==='excavation');
     if (excReps2.length) {
       const totM = excReps2.reduce((s,r)=>s+(r.meters||0),0);
       const totV = excReps2.reduce((s,r)=>s+(parseFloat(r.volume)||0),0);
-      sectionsHTML += secHeader('⛏️','Excavation', excReps2.length, `Total: ${fmtM(totM)} &nbsp;|&nbsp; Vol: ${totV.toFixed(2)} cum`, '#FF9F0A');
+      sectionsHTML += secHeader('⛏️','Excavation', excReps2.length, `Total: ${fmtM(totM)} | Vol: ${totV.toFixed(2)} cum`, '#FF9F0A');
       sectionsHTML += tblStart('#FF9F0A','#','Date','Chainage (From–To)','Length','Qty (cum)','Width (m)','Depth (m)','Soil Type','Supervisor/Engineer');
       excReps2.forEach((r,i) => {
         sectionsHTML += trow(i%2, i+1, r.date||'—', `${r.from||0}m – ${r.to||0}m`, fmtM(r.meters), parseFloat(r.volume||0).toFixed(2), r.width||'—', r.depth||'—', r.soil||'—', r.supervisor||'—');
@@ -6261,7 +6143,7 @@ function exportPDF(mode) {
     if (refReps2.length) {
       const totM = refReps2.reduce((s,r)=>s+(r.meters||0),0);
       const netV = refReps2.reduce((s,r)=>s+(parseFloat(r.netVol||r.volume)||0),0);
-      sectionsHTML += secHeader('🪣','Refilling', refReps2.length, `Total: ${fmtM(totM)} &nbsp;|&nbsp; Net Vol: ${netV.toFixed(2)} cum`, '#30D158');
+      sectionsHTML += secHeader('🪣','Refilling', refReps2.length, `Total: ${fmtM(totM)} | Net Vol: ${netV.toFixed(2)} cum`, '#30D158');
       sectionsHTML += tblStart('#30D158','#','Date','Chainage (From–To)','Length','Gross Qty (cum)','Net Qty (cum)','Width (m)','Depth (m)','Road Restoration','Supervisor/Engineer');
       refReps2.forEach((r,i) => {
         sectionsHTML += trow(i%2, i+1, r.date||'—', `${r.from||0}m – ${r.to||0}m`, fmtM(r.meters), parseFloat(r.volume||0).toFixed(2), parseFloat(r.netVol||r.volume||0).toFixed(2), r.width||'—', r.depth||'—', r.road||'—', r.supervisor||'—');
@@ -6277,9 +6159,7 @@ function exportPDF(mode) {
       valReps2.forEach((r,i) => {
         const chReq = (r.chamberReq&&r.chamberReq!=='—'&&r.chamberReq!=='Not Required') ? bdg('Required','orange') : bdg('Not Required','gray');
         if (r.valves&&r.valves.length>1) {
-          r.valves.forEach((v,vi) => {
-            sectionsHTML += trow(i%2, vi===0?i+1:'', vi===0?r.date||'—':'', vi===0?(r.chainage?`${r.chainage}m`:'—'):'', v.valType||'—', v.size||'—', v.depth||'—', vi===0?chReq:'', vi===0?r.supervisor||'—':'');
-          });
+          r.valves.forEach((v,vi) => { sectionsHTML += trow(i%2, vi===0?i+1:'', vi===0?r.date||'—':'', vi===0?(r.chainage?`${r.chainage}m`:'—'):'', v.valType||'—', v.size||'—', v.depth||'—', vi===0?chReq:'', vi===0?r.supervisor||'—':''); });
         } else {
           sectionsHTML += trow(i%2, i+1, r.date||'—', r.chainage?`${r.chainage}m`:'—', r.valType||'—', r.size||'—', r.depth||'—', chReq, r.supervisor||'—');
         }
@@ -6304,48 +6184,45 @@ function exportPDF(mode) {
     const fitReps2 = reports.filter(r=>r.type==='fitting');
     if (fitReps2.length) {
       const totalFitQty = fitReps2.reduce((s,r)=>s+(parseInt(r.qty)||1),0);
-
-      // Build specials stock summary for this project
       const projSpecials = getSpecialsForProject(project);
       let specialsSummary = '';
       if (projSpecials.length) {
-        specialsSummary = `<table style="width:100%;border-collapse:collapse;font-size:10.5px;margin-bottom:6px">
+        specialsSummary = `<table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:6px">
           <thead><tr>
-            <th style="padding:6px 10px;background:#0e7490;color:#fff;font-size:10px;border:1px solid rgba(255,255,255,0.2);text-align:left">⭐ Special</th>
-            <th style="padding:6px 10px;background:#0e7490;color:#fff;font-size:10px;border:1px solid rgba(255,255,255,0.2);text-align:center">Total (nos)</th>
-            <th style="padding:6px 10px;background:#0e7490;color:#fff;font-size:10px;border:1px solid rgba(255,255,255,0.2);text-align:center">Used (nos)</th>
-            <th style="padding:6px 10px;background:#0e7490;color:#fff;font-size:10px;border:1px solid rgba(255,255,255,0.2);text-align:center">Left (nos)</th>
-            <th style="padding:6px 10px;background:#0e7490;color:#fff;font-size:10px;border:1px solid rgba(255,255,255,0.2);text-align:left">Status</th>
+            <th style="padding:6px 8px;background:#0e7490;color:#fff;font-size:9.5px;border:1px solid rgba(255,255,255,0.2);text-align:left">⭐ Special</th>
+            <th style="padding:6px 8px;background:#0e7490;color:#fff;font-size:9.5px;border:1px solid rgba(255,255,255,0.2);text-align:center">Total</th>
+            <th style="padding:6px 8px;background:#0e7490;color:#fff;font-size:9.5px;border:1px solid rgba(255,255,255,0.2);text-align:center">Used</th>
+            <th style="padding:6px 8px;background:#0e7490;color:#fff;font-size:9.5px;border:1px solid rgba(255,255,255,0.2);text-align:center">Left</th>
+            <th style="padding:6px 8px;background:#0e7490;color:#fff;font-size:9.5px;border:1px solid rgba(255,255,255,0.2)">Status</th>
           </tr></thead><tbody>`;
         projSpecials.forEach(function(s, si) {
-          const used      = getSpecialUsedNos(project, s.name);
-          const total     = s.total || 0;
-          const left      = total > 0 ? Math.max(0, total - used) : null;
-          const pct       = total > 0 ? Math.min(100, Math.round(used/total*100)) : 0;
-          const stColor   = pct>=100 ? '#FF453A' : pct>=75 ? '#FF9F0A' : '#30D158';
-          const stLabel   = pct>=100 ? 'All Used' : pct>=75 ? 'Low Stock' : 'In Stock';
-          const stBg      = pct>=100 ? '#fef2f2' : pct>=75 ? '#fff7ed' : '#f0fdf4';
-          const bg        = si%2===0 ? '#f0f9ff' : '#e0f2fe';
+          const used = getSpecialUsedNos(project, s.name);
+          const total = s.total || 0;
+          const left = total > 0 ? Math.max(0, total - used) : null;
+          const pct = total > 0 ? Math.min(100, Math.round(used/total*100)) : 0;
+          const stColor = pct>=100?'#FF453A':pct>=75?'#FF9F0A':'#30D158';
+          const stLabel = pct>=100?'All Used':pct>=75?'Low Stock':'In Stock';
+          const stBg = pct>=100?'#fef2f2':pct>=75?'#fff7ed':'#f0fdf4';
+          const bg = si%2===0?'#f0f9ff':'#e0f2fe';
           specialsSummary += `<tr style="background:${bg}">
-            <td style="padding:5px 10px;border:1px solid #e0e0e0;font-weight:600">⭐ ${s.name}</td>
-            <td style="padding:5px 10px;border:1px solid #e0e0e0;text-align:center;font-weight:700">${total||'—'}</td>
-            <td style="padding:5px 10px;border:1px solid #e0e0e0;text-align:center;color:#0A84FF;font-weight:700">${used}</td>
-            <td style="padding:5px 10px;border:1px solid #e0e0e0;text-align:center;color:${stColor};font-weight:700">${left!==null?left:'∞'}</td>
-            <td style="padding:5px 10px;border:1px solid #e0e0e0"><span style="display:inline-block;padding:2px 8px;border-radius:8px;font-size:9px;font-weight:700;background:${stBg};color:${stColor}">${stLabel}</span></td>
+            <td style="padding:5px 8px;border:1px solid #e0e0e0;font-weight:600">⭐ ${s.name}</td>
+            <td style="padding:5px 8px;border:1px solid #e0e0e0;text-align:center;font-weight:700">${total||'—'}</td>
+            <td style="padding:5px 8px;border:1px solid #e0e0e0;text-align:center;color:#0A84FF;font-weight:700">${used}</td>
+            <td style="padding:5px 8px;border:1px solid #e0e0e0;text-align:center;color:${stColor};font-weight:700">${left!==null?left:'∞'}</td>
+            <td style="padding:5px 8px;border:1px solid #e0e0e0"><span style="display:inline-block;padding:2px 7px;border-radius:8px;font-size:8.5px;font-weight:700;background:${stBg};color:${stColor}">${stLabel}</span></td>
           </tr>`;
         });
         specialsSummary += `</tbody></table>`;
       }
-
       sectionsHTML += secHeader('🔗','Fittings', fitReps2.length, `Total Qty Used: ${totalFitQty} nos`, '#5AC8FA');
       if (specialsSummary) {
-        sectionsHTML += `<div style="padding:10px;background:#f0f9ff;border:1px solid #bae6fd;border-top:none;font-size:11px;font-weight:700;color:#0369a1;margin-bottom:2px">📦 Specials Stock Summary</div>`;
+        sectionsHTML += `<div style="padding:8px 10px;background:#f0f9ff;border:1px solid #bae6fd;border-top:none;font-size:10px;font-weight:700;color:#0369a1;margin-bottom:2px">📦 Specials Stock Summary</div>`;
         sectionsHTML += specialsSummary;
       }
       sectionsHTML += tblStart('#5AC8FA','#','Date','Chainage (m)','Fitting Type','Special','Qty','Size','Thrust Block Required','Supervisor/Engineer');
       fitReps2.forEach((r,i) => {
         const tb = (r.thrustBlock&&r.thrustBlock!=='—'&&r.thrustBlock!=='Not Required') ? bdg('Required','orange') : bdg('Not Required','gray');
-        const sp = r.special ? `<span style="display:inline-block;padding:2px 7px;border-radius:8px;font-size:9px;font-weight:700;background:#fffbeb;color:#d97706">⭐ ${r.special}</span>` : '—';
+        const sp = r.special ? `<span style="display:inline-block;padding:2px 6px;border-radius:8px;font-size:8.5px;font-weight:700;background:#fffbeb;color:#d97706">⭐ ${r.special}</span>` : '—';
         sectionsHTML += trow(i%2, i+1, r.date||'—', r.chainage?`${r.chainage}m`:'—', r.fitType||'—', sp, r.qty||1, r.size||'—', tb, r.supervisor||'—');
       });
       sectionsHTML += `</tbody></table>`;
@@ -6356,7 +6233,7 @@ function exportPDF(mode) {
     if (strReps2.length) {
       const totEst = strReps2.reduce((s,r)=>s+(parseFloat(r.estConc)||0),0);
       const totAct = strReps2.reduce((s,r)=>s+(parseFloat(r.actualConc)||0),0);
-      sectionsHTML += secHeader('🏗️','Concrete Work', strReps2.length, `Est: ${totEst.toFixed(2)} cum &nbsp;|&nbsp; Actual: ${totAct.toFixed(2)} cum`, '#BF5AF2');
+      sectionsHTML += secHeader('🏗️','Concrete Work', strReps2.length, `Est: ${totEst.toFixed(2)} cum | Actual: ${totAct.toFixed(2)} cum`, '#BF5AF2');
       sectionsHTML += tblStart('#BF5AF2','#','Date','Chainage','Type','Est. Qty (cum)','Actual Qty (cum)','Status','Supervisor/Engineer');
       strReps2.forEach((r,i) => {
         const st = r.strStatus||r.workStatus||'In Progress';
@@ -6366,7 +6243,7 @@ function exportPDF(mode) {
       sectionsHTML += `</tbody></table>`;
     }
 
-        if (sectionsHTML) {
+    if (sectionsHTML) {
       bodyHTML += sectionsHTML;
     } else {
       bodyHTML += `<div style="text-align:center;color:#888;padding:40px">No reports found for this date range.</div>`;
@@ -7718,11 +7595,8 @@ function populateAllProjectDropdowns() {
 }
 
 function renderSpecialsList() {
-  // Render into both admin and PM specials list containers
-  ['specialsList','specialsListPM'].forEach(function(elId) {
-    const elPM = document.getElementById(elId);
-    if (elPM) _renderSpecialsInto(elPM);
-  });
+  const el = document.getElementById('specialsList');
+  if (el) _renderSpecialsInto(el);
 }
 function _renderSpecialsInto(el) {
   if (!el) return;
@@ -7772,13 +7646,8 @@ function _renderSpecialsInto(el) {
 }
 
 function addSpecialForProject() {
-  // Support both admin inputs (newSpecialInput) and PM inputs (newSpecialInputPM)
-  const nameInput  = document.getElementById('newSpecialInputPM') && document.getElementById('newSpecialInputPM').value.trim()
-    ? document.getElementById('newSpecialInputPM')
-    : document.getElementById('newSpecialInput');
-  const totalInput = document.getElementById('newSpecialTotalPM') && document.getElementById('newSpecialTotalPM').value.trim()
-    ? document.getElementById('newSpecialTotalPM')
-    : document.getElementById('newSpecialTotal');
+  const nameInput  = document.getElementById('newSpecialInputPM') || document.getElementById('newSpecialInput');
+  const totalInput = document.getElementById('newSpecialTotalPM') || document.getElementById('newSpecialTotal');
   const val   = nameInput  ? nameInput.value.trim()  : '';
   const total = totalInput ? parseInt(totalInput.value) || 0 : 0;
   if (!val) { showToast('⚠️ Enter a special name'); return; }
@@ -7853,6 +7722,17 @@ function initSettings() {
     if (titleEl) titleEl.textContent = 'Project Settings';
     if (subEl)   subEl.textContent   = 'Manage projects, upload KMZ files, define pipeline routes';
   }
+
+  // Re-enforce visibility on every settings open
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = currentRole === 'admin' ? '' : 'none';
+  });
+  document.querySelectorAll('.admin-only-card').forEach(el => {
+    el.style.display = currentRole === 'admin' ? 'block' : 'none';
+  });
+  document.querySelectorAll('.pm-specials-card').forEach(el => {
+    el.style.display = (currentRole === 'admin' || currentRole === 'pm') ? 'block' : 'none';
+  });
   renderProjectTabs();
   renderKmzStatus();
   renderRouteAdmin();
@@ -8496,7 +8376,7 @@ runMigrations(); seedDemoData(); populateAllProjectDropdowns();
       </div>
       <div style="display:flex;gap:10px">
         <button style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer" onclick="document.getElementById('pdfModal').classList.add('hidden')">Cancel</button>
-        <button style="flex:1;padding:12px;border-radius:10px;border:none;background:var(--blue);color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer" onclick="exportPDF('range')">Generate</button>
+        <button style="flex:1;padding:12px;border-radius:10px;border:none;background:var(--blue);color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer" onclick="exportPDF('grouped')">Generate</button>
       </div>
     </div>
   </div>
