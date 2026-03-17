@@ -953,7 +953,7 @@
   // 2. Register inline service worker via blob
   if ('serviceWorker' in navigator) {
     const swCode = `
-const CACHE='pw-v5';
+const CACHE='pw-v6';
 const URLS=[self.location.origin+self.location.pathname];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS).catch(()=>{})));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});
@@ -2397,7 +2397,7 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
 <script>
 
 // ========== APP VERSION & DATA MIGRATION ==========
-const APP_VERSION = '2.2';
+const APP_VERSION = '2.3';
 // DATA SNAPSHOT — replaced when admin generates a supervisor update
 const EMBEDDED_SNAPSHOT = null;
 const STORAGE_KEYS = [
@@ -6062,6 +6062,30 @@ function exportPDF(mode) {
 
   let bodyHTML = '';
 
+  // Shared helpers
+  function secH(icon,label,count,extra,color){return `<div style="background:${color};color:#fff;padding:8px 14px;border-radius:6px 6px 0 0;font-size:12px;font-weight:700;margin-top:18px">${icon} ${label} <span style="font-weight:400;font-size:10px;opacity:0.85">— ${count} records${extra?` | ${extra}`:''}</span></div>`;}
+  function tblS(color,...cols){const ths=cols.map(c=>`<th style="padding:7px 8px;text-align:left;font-size:9.5px;font-weight:700;color:#fff;background:${color};border:1px solid rgba(255,255,255,0.2);white-space:nowrap">${c}</th>`).join('');return `<table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:4px"><thead><tr>${ths}</tr></thead><tbody>`;}
+  function trw(even,...cells){const bg=even?'#f8f9fc':'#fff';const tds=cells.map(c=>`<td style="padding:5px 8px;border:1px solid #e8e8e8;vertical-align:middle;font-size:10px">${c??'—'}</td>`).join('');return `<tr style="background:${bg}">${tds}</tr>`;}
+  function bdgF(text,style){const s={green:'background:#dcfce7;color:#16a34a',orange:'background:#fff7ed;color:#ea580c',blue:'background:#eff6ff;color:#2563eb',gray:'background:#f1f5f9;color:#475569'};return `<span style="display:inline-block;padding:2px 6px;border-radius:8px;font-size:8.5px;font-weight:700;${s[style]||s.gray}">${text}</span>`;}
+  function buildSections(reps) {
+    let sectionsHTML='';
+    const eR=reps.filter(r=>r.type==='excavation');
+    if(eR.length){const tM=eR.reduce((s,r)=>s+(r.meters||0),0),tV=eR.reduce((s,r)=>s+(parseFloat(r.volume)||0),0);sectionsHTML+=secH('⛏️','Excavation',eR.length,`Total: ${fmtM(tM)} | Vol: ${tV.toFixed(2)} cum`,'#FF9F0A');sectionsHTML+=tblS('#FF9F0A','#','Date','Chainage (From–To)','Length','Qty (cum)','Width (m)','Depth (m)','Soil Type','Supervisor/Eng.');eR.forEach((r,i)=>{sectionsHTML+=trw(i%2,i+1,r.date||'—',`${r.from||0}m – ${r.to||0}m`,fmtM(r.meters),parseFloat(r.volume||0).toFixed(2),r.width||'—',r.depth||'—',r.soil||'—',r.supervisor||'—');});sectionsHTML+=`</tbody></table>`;}
+    const pR=reps.filter(r=>r.type==='pipe');
+    if(pR.length){const tM=pR.reduce((s,r)=>s+(r.meters||0),0);sectionsHTML+=secH('🔩','Pipe Laying',pR.length,`Total: ${fmtM(tM)}`,'#0A84FF');sectionsHTML+=tblS('#0A84FF','#','Date','Chainage (From–To)','Length','Size & Material','CC/RCC Encasing','Encasing Chainage','Supervisor/Eng.');pR.forEach((r,i)=>{const eList=r.encasings&&r.encasings.length?r.encasings.filter(e=>e.type&&e.type!=='Not Required').map(e=>e.type.replace(' Required','')).filter((v,j,a)=>a.indexOf(v)===j).join(', '):(r.encasing&&r.encasing!=='Not Required'?r.encasing.replace(' Required',''):'');const eCh=r.encasings&&r.encasings.length?r.encasings.filter(e=>e.type&&e.type!=='Not Required').map(e=>`${e.from}m–${e.to}m`).join(', '):'—';const enc=eList?bdgF(eList,eList.includes('RCC')?'blue':'orange'):bdgF('Not Required','gray');sectionsHTML+=trw(i%2,i+1,r.date||'—',`${r.from||0}m – ${r.to||0}m`,fmtM(r.meters),`${r.size||'-'} ${r.material||''}`.trim(),enc,eCh||'—',r.supervisor||'—');});sectionsHTML+=`</tbody></table>`;}
+    const rR=reps.filter(r=>r.type==='refill');
+    if(rR.length){const tM=rR.reduce((s,r)=>s+(r.meters||0),0),nV=rR.reduce((s,r)=>s+(parseFloat(r.netVol||r.volume)||0),0);sectionsHTML+=secH('🪣','Refilling',rR.length,`Total: ${fmtM(tM)} | Net: ${nV.toFixed(2)} cum`,'#30D158');sectionsHTML+=tblS('#30D158','#','Date','Chainage (From–To)','Length','Gross Qty (cum)','Net Qty (cum)','Width (m)','Depth (m)','Road Restoration','Supervisor/Eng.');rR.forEach((r,i)=>{sectionsHTML+=trw(i%2,i+1,r.date||'—',`${r.from||0}m – ${r.to||0}m`,fmtM(r.meters),parseFloat(r.volume||0).toFixed(2),parseFloat(r.netVol||r.volume||0).toFixed(2),r.width||'—',r.depth||'—',r.road||'—',r.supervisor||'—');});sectionsHTML+=`</tbody></table>`;}
+    const vR=reps.filter(r=>r.type==='valve');
+    if(vR.length){sectionsHTML+=secH('🔧','Valves',vR.length,'','#FF453A');sectionsHTML+=tblS('#FF453A','#','Date','Chainage (m)','Type','Size','Depth (m)','Chamber Required','Supervisor/Eng.');vR.forEach((r,i)=>{const chReq=(r.chamberReq&&r.chamberReq!=='—'&&r.chamberReq!=='Not Required')?bdgF('Required','orange'):bdgF('Not Required','gray');if(r.valves&&r.valves.length>1){r.valves.forEach((v,vi)=>{sectionsHTML+=trw(i%2,vi===0?i+1:'',vi===0?r.date||'—':'',vi===0?(r.chainage?`${r.chainage}m`:'—'):'',v.valType||'—',v.size||'—',v.depth||'—',vi===0?chReq:'',vi===0?r.supervisor||'—':'');});}else{sectionsHTML+=trw(i%2,i+1,r.date||'—',r.chainage?`${r.chainage}m`:'—',r.valType||'—',r.size||'—',r.depth||'—',chReq,r.supervisor||'—');}});sectionsHTML+=`</tbody></table>`;}
+    const cR=reps.filter(r=>r.type==='chamber');
+    if(cR.length){sectionsHTML+=secH('🏛️','Chambers',cR.length,'','#FF9500');sectionsHTML+=tblS('#FF9500','#','Date','Chainage (m)','Type','Size (L×W×H)','Slab','Precast Kept','Status','Supervisor/Eng.');cR.forEach((r,i)=>{const kept=r.slab==='Precast'?(r.slabKept==='Kept'?bdgF('Kept','green'):bdgF(r.slabKept||'—','orange')):'—';const st=r.chamStatus||'Complete';sectionsHTML+=trw(i%2,i+1,r.date||'—',r.chainage?`${r.chainage}m`:'—',r.chamType||'—',`${r.length||'-'}×${r.width||'-'}×${r.height||'-'} m`,r.slab||'—',kept,bdgF(st,st==='Complete'?'green':st==='Partial'?'orange':'gray'),r.supervisor||'—');});sectionsHTML+=`</tbody></table>`;}
+    const fR=reps.filter(r=>r.type==='fitting');
+    if(fR.length){sectionsHTML+=secH('🔗','Fittings',fR.length,`Total: ${fR.reduce((s,r)=>s+(parseInt(r.qty)||1),0)} nos`,'#5AC8FA');sectionsHTML+=tblS('#5AC8FA','#','Date','Chainage (m)','Type','Size','Thrust Block','Supervisor/Eng.');fR.forEach((r,i)=>{const tb=(r.thrustBlock&&r.thrustBlock!=='—'&&r.thrustBlock!=='Not Required')?bdgF('Required','orange'):bdgF('Not Required','gray');sectionsHTML+=trw(i%2,i+1,r.date||'—',r.chainage?`${r.chainage}m`:'—',r.fitType||'—',r.size||'—',tb,r.supervisor||'—');});sectionsHTML+=`</tbody></table>`;}
+    const sR=reps.filter(r=>r.type==='structure');
+    if(sR.length){const tE=sR.reduce((s,r)=>s+(parseFloat(r.estConc)||0),0),tA=sR.reduce((s,r)=>s+(parseFloat(r.actualConc)||0),0);sectionsHTML+=secH('🏗️','Concrete Work',sR.length,`Est: ${tE.toFixed(2)} | Actual: ${tA.toFixed(2)} cum`,'#BF5AF2');sectionsHTML+=tblS('#BF5AF2','#','Date','Chainage','Type','Est. Qty (cum)','Actual Qty (cum)','Status','Supervisor/Eng.');sR.forEach((r,i)=>{const st=r.strStatus||r.workStatus||'In Progress';const ch=r.from!=null&&r.to!=null?`${r.from}m – ${r.to}m`:r.chainage?`${r.chainage}m`:'—';sectionsHTML+=trw(i%2,i+1,r.date||'—',ch,r.strType||'—',parseFloat(r.estConc||0).toFixed(2),parseFloat(r.actualConc||0).toFixed(2),bdgF(st,st==='Completed'?'green':'orange'),r.supervisor||'—');});sectionsHTML+=`</tbody></table>`;}
+    return sectionsHTML;
+  }
+
   if (mode === 'daily' || mode === 'range' || mode === 'grouped') {
     const reports = allReports.filter(r => {
       if (r.project !== selectedProject) return false;
@@ -6069,352 +6093,63 @@ function exportPDF(mode) {
       return d >= dateFrom && d <= dateTo;
     });
     const supervisors = [...new Set(reports.map(r=>r.supervisor))].filter(Boolean).join(', ') || '—';
-    const project = selectedProject;
-
-    const excM  = reports.filter(r=>r.type==='excavation').reduce((s,r)=>s+(r.meters||0),0);
-    const pipeM = reports.filter(r=>r.type==='pipe').reduce((s,r)=>s+(r.meters||0),0);
-    const refM  = reports.filter(r=>r.type==='refill').reduce((s,r)=>s+(r.meters||0),0);
-    const valC  = reports.filter(r=>r.type==='valve').length;
-    const chamC = reports.filter(r=>r.type==='chamber').length;
-    const strC  = reports.filter(r=>r.type==='structure').length;
-    const fitC  = reports.filter(r=>r.type==='fitting').length;
-
-    const dateLabel = dateFrom === dateTo ? dateFrom : dateFrom + ' → ' + dateTo;
+    const excM=reports.filter(r=>r.type==='excavation').reduce((s,r)=>s+(r.meters||0),0);
+    const pipeM=reports.filter(r=>r.type==='pipe').reduce((s,r)=>s+(r.meters||0),0);
+    const refM=reports.filter(r=>r.type==='refill').reduce((s,r)=>s+(r.meters||0),0);
+    const valC=reports.filter(r=>r.type==='valve').length;
+    const chamC=reports.filter(r=>r.type==='chamber').length;
+    const strC=reports.filter(r=>r.type==='structure').length;
+    const fitC=reports.filter(r=>r.type==='fitting').length;
+    const dateLabel = dateFrom===dateTo ? dateFrom : dateFrom+' → '+dateTo;
     bodyHTML += pageHeader('Progress Report', `${selectedProject} | ${dateLabel}`);
     bodyHTML += `<div style="padding:0 20px 20px">`;
-    bodyHTML += `<div style="color:#888;font-size:11px;margin-bottom:14px;border-bottom:1px solid #eee;padding-bottom:10px">Generated: ${new Date().toLocaleString('en-IN')} &nbsp;|&nbsp; Total Reports: ${reports.length} &nbsp;|&nbsp; Supervisor(s): ${supervisors}</div>`;
-
-    // Stats row
-    bodyHTML += `<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px">
-      ${statBox('Excavation', fmtM(excM), TYPE_COLORS.excavation)}
-      ${statBox('Pipe Laying', fmtM(pipeM), TYPE_COLORS.pipe)}
-      ${statBox('Refilling', fmtM(refM), TYPE_COLORS.refill)}
-      ${statBox('Valves', valC, TYPE_COLORS.valve)}
-      ${statBox('Chambers', chamC, '#FF9500')}
-      ${statBox('Concrete', strC, TYPE_COLORS.structure)}
-      ${statBox('Fittings', fitC, '#5AC8FA')}
-    </div>`;
-
-    let sectionsHTML = '';
-
-    function secHeader(icon, label, count, extra, color) {
-      return `<div style="background:${color};color:#fff;padding:8px 14px;border-radius:6px 6px 0 0;font-size:12px;font-weight:700;margin-top:18px">
-        ${icon} ${label} <span style="font-weight:400;font-size:10px;opacity:0.85">— ${count} records${extra?` &nbsp;|&nbsp; ${extra}`:''}</span>
-      </div>`;
-    }
-    function tblStart(color, ...cols) {
-      const ths = cols.map(c=>`<th style="padding:7px 8px;text-align:left;font-size:9.5px;font-weight:700;color:#fff;background:${color};border:1px solid rgba(255,255,255,0.2);white-space:nowrap">${c}</th>`).join('');
-      return `<table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:4px"><thead><tr>${ths}</tr></thead><tbody>`;
-    }
-    function trow(even, ...cells) {
-      const bg = even ? '#f8f9fc' : '#fff';
-      const tds = cells.map(c=>`<td style="padding:5px 8px;border:1px solid #e8e8e8;vertical-align:middle;line-height:1.4;font-size:10px">${c??'—'}</td>`).join('');
-      return `<tr style="background:${bg}">${tds}</tr>`;
-    }
-    function bdg(text, style) {
-      const s={green:'background:#dcfce7;color:#16a34a',orange:'background:#fff7ed;color:#ea580c',blue:'background:#eff6ff;color:#2563eb',gray:'background:#f1f5f9;color:#475569'};
-      return `<span style="display:inline-block;padding:2px 6px;border-radius:8px;font-size:8.5px;font-weight:700;${s[style]||s.gray}">${text}</span>`;
-    }
-
-    // ── EXCAVATION ──────────────────────────────────────────────────────────
-    const excReps2 = reports.filter(r=>r.type==='excavation');
-    if (excReps2.length) {
-      const totM = excReps2.reduce((s,r)=>s+(r.meters||0),0);
-      const totV = excReps2.reduce((s,r)=>s+(parseFloat(r.volume)||0),0);
-      sectionsHTML += secHeader('⛏️','Excavation', excReps2.length, `Total: ${fmtM(totM)} | Vol: ${totV.toFixed(2)} cum`, '#FF9F0A');
-      sectionsHTML += tblStart('#FF9F0A','#','Date','Chainage (From–To)','Length','Qty (cum)','Width (m)','Depth (m)','Soil Type','Supervisor/Engineer');
-      excReps2.forEach((r,i) => {
-        sectionsHTML += trow(i%2, i+1, r.date||'—', `${r.from||0}m – ${r.to||0}m`, fmtM(r.meters), parseFloat(r.volume||0).toFixed(2), r.width||'—', r.depth||'—', r.soil||'—', r.supervisor||'—');
-      });
-      sectionsHTML += `</tbody></table>`;
-    }
-
-    // ── PIPE LAYING ─────────────────────────────────────────────────────────
-    const pipeReps2 = reports.filter(r=>r.type==='pipe');
-    if (pipeReps2.length) {
-      const totM = pipeReps2.reduce((s,r)=>s+(r.meters||0),0);
-      sectionsHTML += secHeader('🔩','Pipe Laying', pipeReps2.length, `Total: ${fmtM(totM)}`, '#0A84FF');
-      sectionsHTML += tblStart('#0A84FF','#','Date','Chainage (From–To)','Length','Size & Material','CC/RCC Encasing','Encasing Chainage','Supervisor/Engineer');
-      pipeReps2.forEach((r,i) => {
-        const eList = r.encasings&&r.encasings.length ? r.encasings.filter(e=>e.type&&e.type!=='Not Required').map(e=>e.type.replace(' Required','')).filter((v,j,a)=>a.indexOf(v)===j).join(', ') : (r.encasing&&r.encasing!=='Not Required'?r.encasing.replace(' Required',''):'');
-        const eCh = r.encasings&&r.encasings.length ? r.encasings.filter(e=>e.type&&e.type!=='Not Required').map(e=>`${e.from}m–${e.to}m`).join(', ') : '—';
-        const enc = eList ? bdg(eList, eList.includes('RCC')?'blue':'orange') : bdg('Not Required','gray');
-        sectionsHTML += trow(i%2, i+1, r.date||'—', `${r.from||0}m – ${r.to||0}m`, fmtM(r.meters), `${r.size||'-'} ${r.material||''}`.trim(), enc, eCh||'—', r.supervisor||'—');
-      });
-      sectionsHTML += `</tbody></table>`;
-    }
-
-    // ── REFILLING ───────────────────────────────────────────────────────────
-    const refReps2 = reports.filter(r=>r.type==='refill');
-    if (refReps2.length) {
-      const totM = refReps2.reduce((s,r)=>s+(r.meters||0),0);
-      const netV = refReps2.reduce((s,r)=>s+(parseFloat(r.netVol||r.volume)||0),0);
-      sectionsHTML += secHeader('🪣','Refilling', refReps2.length, `Total: ${fmtM(totM)} | Net Vol: ${netV.toFixed(2)} cum`, '#30D158');
-      sectionsHTML += tblStart('#30D158','#','Date','Chainage (From–To)','Length','Gross Qty (cum)','Net Qty (cum)','Width (m)','Depth (m)','Road Restoration','Supervisor/Engineer');
-      refReps2.forEach((r,i) => {
-        sectionsHTML += trow(i%2, i+1, r.date||'—', `${r.from||0}m – ${r.to||0}m`, fmtM(r.meters), parseFloat(r.volume||0).toFixed(2), parseFloat(r.netVol||r.volume||0).toFixed(2), r.width||'—', r.depth||'—', r.road||'—', r.supervisor||'—');
-      });
-      sectionsHTML += `</tbody></table>`;
-    }
-
-    // ── VALVES ──────────────────────────────────────────────────────────────
-    const valReps2 = reports.filter(r=>r.type==='valve');
-    if (valReps2.length) {
-      sectionsHTML += secHeader('🔧','Valves', valReps2.length, '', '#FF453A');
-      sectionsHTML += tblStart('#FF453A','#','Date','Chainage (m)','Valve Type','Size','Depth (m)','Chamber Required','Supervisor/Engineer');
-      valReps2.forEach((r,i) => {
-        const chReq = (r.chamberReq&&r.chamberReq!=='—'&&r.chamberReq!=='Not Required') ? bdg('Required','orange') : bdg('Not Required','gray');
-        if (r.valves&&r.valves.length>1) {
-          r.valves.forEach((v,vi) => { sectionsHTML += trow(i%2, vi===0?i+1:'', vi===0?r.date||'—':'', vi===0?(r.chainage?`${r.chainage}m`:'—'):'', v.valType||'—', v.size||'—', v.depth||'—', vi===0?chReq:'', vi===0?r.supervisor||'—':''); });
-        } else {
-          sectionsHTML += trow(i%2, i+1, r.date||'—', r.chainage?`${r.chainage}m`:'—', r.valType||'—', r.size||'—', r.depth||'—', chReq, r.supervisor||'—');
-        }
-      });
-      sectionsHTML += `</tbody></table>`;
-    }
-
-    // ── CHAMBERS ────────────────────────────────────────────────────────────
-    const chamReps2 = reports.filter(r=>r.type==='chamber');
-    if (chamReps2.length) {
-      sectionsHTML += secHeader('🏛️','Chambers', chamReps2.length, '', '#FF9500');
-      sectionsHTML += tblStart('#FF9500','#','Date','Chainage (m)','Chamber Type','Size (L×W×H)','Slab Type','Precast Kept','Status','Supervisor/Engineer');
-      chamReps2.forEach((r,i) => {
-        const kept = r.slab==='Precast' ? (r.slabKept==='Kept'?bdg('Kept','green'):bdg(r.slabKept||'—','orange')) : '—';
-        const st = r.chamStatus||'Complete';
-        sectionsHTML += trow(i%2, i+1, r.date||'—', r.chainage?`${r.chainage}m`:'—', r.chamType||'—', `${r.length||'-'}×${r.width||'-'}×${r.height||'-'} m`, r.slab||'—', kept, bdg(st, st==='Complete'?'green':st==='Partial'?'orange':'gray'), r.supervisor||'—');
-      });
-      sectionsHTML += `</tbody></table>`;
-    }
-
-    // ── FITTINGS ────────────────────────────────────────────────────────────
-    const fitReps2 = reports.filter(r=>r.type==='fitting');
-    if (fitReps2.length) {
-      const totalFitQty = fitReps2.reduce((s,r)=>s+(parseInt(r.qty)||1),0);
-      const projSpecials = getSpecialsForProject(project);
-      let specialsSummary = '';
-      if (projSpecials.length) {
-        specialsSummary = `<table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:6px">
-          <thead><tr>
-            <th style="padding:6px 8px;background:#0e7490;color:#fff;font-size:9.5px;border:1px solid rgba(255,255,255,0.2);text-align:left">⭐ Special</th>
-            <th style="padding:6px 8px;background:#0e7490;color:#fff;font-size:9.5px;border:1px solid rgba(255,255,255,0.2);text-align:center">Total</th>
-            <th style="padding:6px 8px;background:#0e7490;color:#fff;font-size:9.5px;border:1px solid rgba(255,255,255,0.2);text-align:center">Used</th>
-            <th style="padding:6px 8px;background:#0e7490;color:#fff;font-size:9.5px;border:1px solid rgba(255,255,255,0.2);text-align:center">Left</th>
-            <th style="padding:6px 8px;background:#0e7490;color:#fff;font-size:9.5px;border:1px solid rgba(255,255,255,0.2)">Status</th>
-          </tr></thead><tbody>`;
-        projSpecials.forEach(function(s, si) {
-          const used = getSpecialUsedNos(project, s.name);
-          const total = s.total || 0;
-          const left = total > 0 ? Math.max(0, total - used) : null;
-          const pct = total > 0 ? Math.min(100, Math.round(used/total*100)) : 0;
-          const stColor = pct>=100?'#FF453A':pct>=75?'#FF9F0A':'#30D158';
-          const stLabel = pct>=100?'All Used':pct>=75?'Low Stock':'In Stock';
-          const stBg = pct>=100?'#fef2f2':pct>=75?'#fff7ed':'#f0fdf4';
-          const bg = si%2===0?'#f0f9ff':'#e0f2fe';
-          specialsSummary += `<tr style="background:${bg}">
-            <td style="padding:5px 8px;border:1px solid #e0e0e0;font-weight:600">⭐ ${s.name}</td>
-            <td style="padding:5px 8px;border:1px solid #e0e0e0;text-align:center;font-weight:700">${total||'—'}</td>
-            <td style="padding:5px 8px;border:1px solid #e0e0e0;text-align:center;color:#0A84FF;font-weight:700">${used}</td>
-            <td style="padding:5px 8px;border:1px solid #e0e0e0;text-align:center;color:${stColor};font-weight:700">${left!==null?left:'∞'}</td>
-            <td style="padding:5px 8px;border:1px solid #e0e0e0"><span style="display:inline-block;padding:2px 7px;border-radius:8px;font-size:8.5px;font-weight:700;background:${stBg};color:${stColor}">${stLabel}</span></td>
-          </tr>`;
-        });
-        specialsSummary += `</tbody></table>`;
-      }
-      sectionsHTML += secHeader('🔗','Fittings', fitReps2.length, `Total Qty Used: ${totalFitQty} nos`, '#5AC8FA');
-      if (specialsSummary) {
-        sectionsHTML += `<div style="padding:8px 10px;background:#f0f9ff;border:1px solid #bae6fd;border-top:none;font-size:10px;font-weight:700;color:#0369a1;margin-bottom:2px">📦 Specials Stock Summary</div>`;
-        sectionsHTML += specialsSummary;
-      }
-      sectionsHTML += tblStart('#5AC8FA','#','Date','Chainage (m)','Fitting Type','Special','Qty','Size','Thrust Block Required','Supervisor/Engineer');
-      fitReps2.forEach((r,i) => {
-        const tb = (r.thrustBlock&&r.thrustBlock!=='—'&&r.thrustBlock!=='Not Required') ? bdg('Required','orange') : bdg('Not Required','gray');
-        const sp = r.special ? `<span style="display:inline-block;padding:2px 6px;border-radius:8px;font-size:8.5px;font-weight:700;background:#fffbeb;color:#d97706">⭐ ${r.special}</span>` : '—';
-        sectionsHTML += trow(i%2, i+1, r.date||'—', r.chainage?`${r.chainage}m`:'—', r.fitType||'—', sp, r.qty||1, r.size||'—', tb, r.supervisor||'—');
-      });
-      sectionsHTML += `</tbody></table>`;
-    }
-
-    // ── CONCRETE WORK ────────────────────────────────────────────────────────
-    const strReps2 = reports.filter(r=>r.type==='structure');
-    if (strReps2.length) {
-      const totEst = strReps2.reduce((s,r)=>s+(parseFloat(r.estConc)||0),0);
-      const totAct = strReps2.reduce((s,r)=>s+(parseFloat(r.actualConc)||0),0);
-      sectionsHTML += secHeader('🏗️','Concrete Work', strReps2.length, `Est: ${totEst.toFixed(2)} cum | Actual: ${totAct.toFixed(2)} cum`, '#BF5AF2');
-      sectionsHTML += tblStart('#BF5AF2','#','Date','Chainage','Type','Est. Qty (cum)','Actual Qty (cum)','Status','Supervisor/Engineer');
-      strReps2.forEach((r,i) => {
-        const st = r.strStatus||r.workStatus||'In Progress';
-        const ch = r.from!=null&&r.to!=null ? `${r.from}m – ${r.to}m` : r.chainage ? `${r.chainage}m` : '—';
-        sectionsHTML += trow(i%2, i+1, r.date||'—', ch, r.strType||'—', parseFloat(r.estConc||0).toFixed(2), parseFloat(r.actualConc||0).toFixed(2), bdg(st, st==='Completed'?'green':'orange'), r.supervisor||'—');
-      });
-      sectionsHTML += `</tbody></table>`;
-    }
-
-    if (sectionsHTML) {
-      bodyHTML += sectionsHTML;
-    } else {
-      bodyHTML += `<div style="text-align:center;color:#888;padding:40px">No reports found for this date range.</div>`;
-    }
-
+    bodyHTML += `<div style="color:#888;font-size:11px;margin-bottom:14px;border-bottom:1px solid #eee;padding-bottom:10px">Generated: ${new Date().toLocaleString('en-IN')} | Total: ${reports.length} reports | Supervisor(s): ${supervisors}</div>`;
+    bodyHTML += `<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px">${statBox('Excavation',fmtM(excM),TYPE_COLORS.excavation)}${statBox('Pipe Laying',fmtM(pipeM),TYPE_COLORS.pipe)}${statBox('Refilling',fmtM(refM),TYPE_COLORS.refill)}${statBox('Valves',valC,TYPE_COLORS.valve)}${statBox('Chambers',chamC,'#FF9500')}${statBox('Concrete',strC,TYPE_COLORS.structure)}${statBox('Fittings',fitC,'#5AC8FA')}</div>`;
+    const sec = buildSections(reports);
+    bodyHTML += sec || `<div style="text-align:center;color:#888;padding:40px">No reports found.</div>`;
     bodyHTML += `</div>`;
 
   } else {
     // Full project report — all projects (overall mode)
-    const visProjects = getVisibleProjects();
-    visProjects.forEach((proj, pi) => {
+    getVisibleProjects().forEach((proj, pi) => {
       const reports = allReports.filter(r => r.project === proj);
       if (!reports.length) return;
       if (pi > 0) bodyHTML += `<div style="page-break-before:always"></div>`;
-
-      const project = proj;
-      const supervisors = [...new Set(reports.map(r=>r.supervisor))].filter(Boolean).join(', ') || '—';
-      const excM  = reports.filter(r=>r.type==='excavation').reduce((s,r)=>s+(r.meters||0),0);
-      const pipeM = reports.filter(r=>r.type==='pipe').reduce((s,r)=>s+(r.meters||0),0);
-      const refM  = reports.filter(r=>r.type==='refill').reduce((s,r)=>s+(r.meters||0),0);
-      const valC  = reports.filter(r=>r.type==='valve').length;
-      const chamC = reports.filter(r=>r.type==='chamber').length;
-      const strC  = reports.filter(r=>r.type==='structure').length;
-      const fitC  = reports.filter(r=>r.type==='fitting').length;
-
+      const supervisors=[...new Set(reports.map(r=>r.supervisor))].filter(Boolean).join(', ')||'—';
+      const excM=reports.filter(r=>r.type==='excavation').reduce((s,r)=>s+(r.meters||0),0);
+      const pipeM=reports.filter(r=>r.type==='pipe').reduce((s,r)=>s+(r.meters||0),0);
+      const refM=reports.filter(r=>r.type==='refill').reduce((s,r)=>s+(r.meters||0),0);
+      const valC=reports.filter(r=>r.type==='valve').length;
+      const chamC=reports.filter(r=>r.type==='chamber').length;
+      const strC=reports.filter(r=>r.type==='structure').length;
+      const fitC=reports.filter(r=>r.type==='fitting').length;
       bodyHTML += pageHeader('Project Summary Report', `${proj} | Generated: ${new Date().toLocaleDateString('en-IN')}`);
       bodyHTML += `<div style="padding:0 20px 20px">`;
-      bodyHTML += `<div style="color:#888;font-size:11px;margin-bottom:14px;border-bottom:1px solid #eee;padding-bottom:10px">Generated: ${new Date().toLocaleString('en-IN')} &nbsp;|&nbsp; Total Reports: ${reports.length} &nbsp;|&nbsp; Supervisor(s): ${supervisors}</div>`;
-
-      bodyHTML += `<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px">
-        ${statBox('Excavation', fmtM(excM), TYPE_COLORS.excavation)}
-        ${statBox('Pipe Laying', fmtM(pipeM), TYPE_COLORS.pipe)}
-        ${statBox('Refilling', fmtM(refM), TYPE_COLORS.refill)}
-        ${statBox('Valves', valC, TYPE_COLORS.valve)}
-        ${statBox('Chambers', chamC, '#FF9500')}
-        ${statBox('Concrete', strC, TYPE_COLORS.structure)}
-        ${statBox('Fittings', fitC, '#5AC8FA')}
-      </div>`;
-
-      let sectionsHTML = '';
-
-      function secHdr(icon, label, count, extra, color) {
-        return `<div style="background:${color};color:#fff;padding:8px 14px;border-radius:6px 6px 0 0;font-size:12px;font-weight:700;margin-top:18px">
-          ${icon} ${label} <span style="font-weight:400;font-size:10px;opacity:0.85">— ${count} records${extra?` &nbsp;|&nbsp; ${extra}`:''}</span>
-        </div>`;
-      }
-      function tblS(color, ...cols) {
-        const ths = cols.map(c=>`<th style="padding:7px 8px;text-align:left;font-size:9.5px;font-weight:700;color:#fff;background:${color};border:1px solid rgba(255,255,255,0.2);white-space:nowrap">${c}</th>`).join('');
-        return `<table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:4px"><thead><tr>${ths}</tr></thead><tbody>`;
-      }
-      function trw(even, ...cells) {
-        const bg = even ? '#f8f9fc' : '#fff';
-        const tds = cells.map(c=>`<td style="padding:5px 8px;border:1px solid #e8e8e8;vertical-align:middle;line-height:1.4;font-size:10px">${c??'—'}</td>`).join('');
-        return `<tr style="background:${bg}">${tds}</tr>`;
-      }
-      function bdgO(text, style) {
-        const s={green:'background:#dcfce7;color:#16a34a',orange:'background:#fff7ed;color:#ea580c',blue:'background:#eff6ff;color:#2563eb',gray:'background:#f1f5f9;color:#475569'};
-        return `<span style="display:inline-block;padding:2px 6px;border-radius:8px;font-size:8.5px;font-weight:700;${s[style]||s.gray}">${text}</span>`;
-      }
-
-      const eR = reports.filter(r=>r.type==='excavation');
-      if (eR.length) {
-        const tM=eR.reduce((s,r)=>s+(r.meters||0),0), tV=eR.reduce((s,r)=>s+(parseFloat(r.volume)||0),0);
-        sectionsHTML += secHdr('⛏️','Excavation',eR.length,`Total: ${fmtM(tM)} | Vol: ${tV.toFixed(2)} cum`,'#FF9F0A');
-        sectionsHTML += tblS('#FF9F0A','#','Date','Chainage (From–To)','Length','Qty (cum)','Width (m)','Depth (m)','Soil Type','Supervisor/Engineer');
-        eR.forEach((r,i)=>{ sectionsHTML+=trw(i%2,i+1,r.date||'—',`${r.from||0}m – ${r.to||0}m`,fmtM(r.meters),parseFloat(r.volume||0).toFixed(2),r.width||'—',r.depth||'—',r.soil||'—',r.supervisor||'—'); });
-        sectionsHTML += `</tbody></table>`;
-      }
-
-      const pR = reports.filter(r=>r.type==='pipe');
-      if (pR.length) {
-        const tM=pR.reduce((s,r)=>s+(r.meters||0),0);
-        sectionsHTML += secHdr('🔩','Pipe Laying',pR.length,`Total: ${fmtM(tM)}`,'#0A84FF');
-        sectionsHTML += tblS('#0A84FF','#','Date','Chainage (From–To)','Length','Size & Material','CC/RCC Encasing','Encasing Chainage','Supervisor/Engineer');
-        pR.forEach((r,i)=>{
-          const eList=r.encasings&&r.encasings.length?r.encasings.filter(e=>e.type&&e.type!=='Not Required').map(e=>e.type.replace(' Required','')).filter((v,j,a)=>a.indexOf(v)===j).join(', '):(r.encasing&&r.encasing!=='Not Required'?r.encasing.replace(' Required',''):'');
-          const eCh=r.encasings&&r.encasings.length?r.encasings.filter(e=>e.type&&e.type!=='Not Required').map(e=>`${e.from}m–${e.to}m`).join(', '):'—';
-          const enc=eList?bdgO(eList,eList.includes('RCC')?'blue':'orange'):bdgO('Not Required','gray');
-          sectionsHTML+=trw(i%2,i+1,r.date||'—',`${r.from||0}m – ${r.to||0}m`,fmtM(r.meters),`${r.size||'-'} ${r.material||''}`.trim(),enc,eCh||'—',r.supervisor||'—');
-        });
-        sectionsHTML += `</tbody></table>`;
-      }
-
-      const rR = reports.filter(r=>r.type==='refill');
-      if (rR.length) {
-        const tM=rR.reduce((s,r)=>s+(r.meters||0),0), nV=rR.reduce((s,r)=>s+(parseFloat(r.netVol||r.volume)||0),0);
-        sectionsHTML += secHdr('🪣','Refilling',rR.length,`Total: ${fmtM(tM)} | Net Vol: ${nV.toFixed(2)} cum`,'#30D158');
-        sectionsHTML += tblS('#30D158','#','Date','Chainage (From–To)','Length','Gross Qty (cum)','Net Qty (cum)','Width (m)','Depth (m)','Road Restoration','Supervisor/Engineer');
-        rR.forEach((r,i)=>{ sectionsHTML+=trw(i%2,i+1,r.date||'—',`${r.from||0}m – ${r.to||0}m`,fmtM(r.meters),parseFloat(r.volume||0).toFixed(2),parseFloat(r.netVol||r.volume||0).toFixed(2),r.width||'—',r.depth||'—',r.road||'—',r.supervisor||'—'); });
-        sectionsHTML += `</tbody></table>`;
-      }
-
-      const vR = reports.filter(r=>r.type==='valve');
-      if (vR.length) {
-        sectionsHTML += secHdr('🔧','Valves',vR.length,'','#FF453A');
-        sectionsHTML += tblS('#FF453A','#','Date','Chainage (m)','Valve Type','Size','Depth (m)','Chamber Required','Supervisor/Engineer');
-        vR.forEach((r,i)=>{
-          const chReq=(r.chamberReq&&r.chamberReq!=='—'&&r.chamberReq!=='Not Required')?bdgO('Required','orange'):bdgO('Not Required','gray');
-          if (r.valves&&r.valves.length>1) { r.valves.forEach((v,vi)=>{ sectionsHTML+=trw(i%2,vi===0?i+1:'',vi===0?r.date||'—':'',vi===0?(r.chainage?`${r.chainage}m`:'—'):'',v.valType||'—',v.size||'—',v.depth||'—',vi===0?chReq:'',vi===0?r.supervisor||'—':''); }); }
-          else { sectionsHTML+=trw(i%2,i+1,r.date||'—',r.chainage?`${r.chainage}m`:'—',r.valType||'—',r.size||'—',r.depth||'—',chReq,r.supervisor||'—'); }
-        });
-        sectionsHTML += `</tbody></table>`;
-      }
-
-      const cR = reports.filter(r=>r.type==='chamber');
-      if (cR.length) {
-        sectionsHTML += secHdr('🏛️','Chambers',cR.length,'','#FF9500');
-        sectionsHTML += tblS('#FF9500','#','Date','Chainage (m)','Chamber Type','Size (L×W×H)','Slab Type','Precast Kept','Status','Supervisor/Engineer');
-        cR.forEach((r,i)=>{
-          const kept=r.slab==='Precast'?(r.slabKept==='Kept'?bdgO('Kept','green'):bdgO(r.slabKept||'—','orange')):'—';
-          const st=r.chamStatus||'Complete';
-          sectionsHTML+=trw(i%2,i+1,r.date||'—',r.chainage?`${r.chainage}m`:'—',r.chamType||'—',`${r.length||'-'}×${r.width||'-'}×${r.height||'-'} m`,r.slab||'—',kept,bdgO(st,st==='Complete'?'green':st==='Partial'?'orange':'gray'),r.supervisor||'—');
-        });
-        sectionsHTML += `</tbody></table>`;
-      }
-
-      const fR = reports.filter(r=>r.type==='fitting');
-      if (fR.length) {
-        const totalFitQty=fR.reduce((s,r)=>s+(parseInt(r.qty)||1),0);
-        const projSpecials=getSpecialsForProject(project);
-        let spSum='';
-        if (projSpecials.length) {
-          spSum=`<table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:6px"><thead><tr>
-            <th style="padding:6px 8px;background:#0e7490;color:#fff;font-size:9.5px;border:1px solid rgba(255,255,255,0.2)">⭐ Special</th>
-            <th style="padding:6px 8px;background:#0e7490;color:#fff;font-size:9.5px;border:1px solid rgba(255,255,255,0.2);text-align:center">Total</th>
-            <th style="padding:6px 8px;background:#0e7490;color:#fff;font-size:9.5px;border:1px solid rgba(255,255,255,0.2);text-align:center">Used</th>
-            <th style="padding:6px 8px;background:#0e7490;color:#fff;font-size:9.5px;border:1px solid rgba(255,255,255,0.2);text-align:center">Left</th>
-            <th style="padding:6px 8px;background:#0e7490;color:#fff;font-size:9.5px;border:1px solid rgba(255,255,255,0.2)">Status</th>
-          </tr></thead><tbody>`;
-          projSpecials.forEach(function(s,si){
-            const used=getSpecialUsedNos(project,s.name),total=s.total||0,left=total>0?Math.max(0,total-used):null;
-            const pct=total>0?Math.min(100,Math.round(used/total*100)):0;
-            const sc=pct>=100?'#FF453A':pct>=75?'#FF9F0A':'#30D158',sl=pct>=100?'All Used':pct>=75?'Low Stock':'In Stock',sb=pct>=100?'#fef2f2':pct>=75?'#fff7ed':'#f0fdf4';
-            spSum+=`<tr style="background:${si%2===0?'#f0f9ff':'#e0f2fe'}"><td style="padding:5px 8px;border:1px solid #e0e0e0;font-weight:600">⭐ ${s.name}</td><td style="padding:5px 8px;border:1px solid #e0e0e0;text-align:center;font-weight:700">${total||'—'}</td><td style="padding:5px 8px;border:1px solid #e0e0e0;text-align:center;color:#0A84FF;font-weight:700">${used}</td><td style="padding:5px 8px;border:1px solid #e0e0e0;text-align:center;color:${sc};font-weight:700">${left!==null?left:'∞'}</td><td style="padding:5px 8px;border:1px solid #e0e0e0"><span style="display:inline-block;padding:2px 7px;border-radius:8px;font-size:8.5px;font-weight:700;background:${sb};color:${sc}">${sl}</span></td></tr>`;
-          });
-          spSum+=`</tbody></table>`;
-        }
-        sectionsHTML += secHdr('🔗','Fittings',fR.length,`Total Qty: ${totalFitQty} nos`,'#5AC8FA');
-        if (spSum) sectionsHTML += `<div style="padding:8px 10px;background:#f0f9ff;border:1px solid #bae6fd;border-top:none;font-size:10px;font-weight:700;color:#0369a1;margin-bottom:2px">📦 Specials Stock Summary</div>`+spSum;
-        sectionsHTML += tblS('#5AC8FA','#','Date','Chainage (m)','Fitting Type','Special','Qty','Size','Thrust Block Required','Supervisor/Engineer');
-        fR.forEach((r,i)=>{
-          const tb=(r.thrustBlock&&r.thrustBlock!=='—'&&r.thrustBlock!=='Not Required')?bdgO('Required','orange'):bdgO('Not Required','gray');
-          const sp=r.special?`<span style="display:inline-block;padding:2px 6px;border-radius:8px;font-size:8.5px;font-weight:700;background:#fffbeb;color:#d97706">⭐ ${r.special}</span>`:'—';
-          sectionsHTML+=trw(i%2,i+1,r.date||'—',r.chainage?`${r.chainage}m`:'—',r.fitType||'—',sp,r.qty||1,r.size||'—',tb,r.supervisor||'—');
-        });
-        sectionsHTML += `</tbody></table>`;
-      }
-
-      const sR = reports.filter(r=>r.type==='structure');
-      if (sR.length) {
-        const tE=sR.reduce((s,r)=>s+(parseFloat(r.estConc)||0),0),tA=sR.reduce((s,r)=>s+(parseFloat(r.actualConc)||0),0);
-        sectionsHTML += secHdr('🏗️','Concrete Work',sR.length,`Est: ${tE.toFixed(2)} cum | Actual: ${tA.toFixed(2)} cum`,'#BF5AF2');
-        sectionsHTML += tblS('#BF5AF2','#','Date','Chainage','Type','Est. Qty (cum)','Actual Qty (cum)','Status','Supervisor/Engineer');
-        sR.forEach((r,i)=>{
-          const st=r.strStatus||r.workStatus||'In Progress';
-          const ch=r.from!=null&&r.to!=null?`${r.from}m – ${r.to}m`:r.chainage?`${r.chainage}m`:'—';
-          sectionsHTML+=trw(i%2,i+1,r.date||'—',ch,r.strType||'—',parseFloat(r.estConc||0).toFixed(2),parseFloat(r.actualConc||0).toFixed(2),bdgO(st,st==='Completed'?'green':'orange'),r.supervisor||'—');
-        });
-        sectionsHTML += `</tbody></table>`;
-      }
-
-      bodyHTML += sectionsHTML || `<div style="text-align:center;color:#888;padding:40px">No reports found.</div>`;
+      bodyHTML += `<div style="color:#888;font-size:11px;margin-bottom:14px;border-bottom:1px solid #eee;padding-bottom:10px">Generated: ${new Date().toLocaleString('en-IN')} | Total: ${reports.length} reports | Supervisor(s): ${supervisors}</div>`;
+      bodyHTML += `<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px">${statBox('Excavation',fmtM(excM),TYPE_COLORS.excavation)}${statBox('Pipe Laying',fmtM(pipeM),TYPE_COLORS.pipe)}${statBox('Refilling',fmtM(refM),TYPE_COLORS.refill)}${statBox('Valves',valC,TYPE_COLORS.valve)}${statBox('Chambers',chamC,'#FF9500')}${statBox('Concrete',strC,TYPE_COLORS.structure)}${statBox('Fittings',fitC,'#5AC8FA')}</div>`;
+      const sec = buildSections(reports);
+      bodyHTML += sec || `<div style="text-align:center;color:#888;padding:40px">No reports found.</div>`;
       bodyHTML += `</div>`;
     });
   }
+
+    const fullHTML = `<!DOCTYPE html><html><head><meta charset="utf-8">
+  <title>Pipeline Work Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Noto Serif',Cambria,Georgia,serif; background:#f0f2f5; color:#1a1a2e; }
+    .page { max-width:960px; margin:0 auto; background:#fff; }
+    table { border-collapse:collapse; }
+    @media print { body{background:#fff;} .no-print{display:none;} }
+    .no-print { padding:16px; text-align:center; }
+    .no-print button { padding:10px 24px; background:#0A84FF; color:#fff; border:none; border-radius:8px; font-size:14px; cursor:pointer; }
+    th { background:#FF9F0A; color:#fff; }
+  </style>
+  </head><body><div class="page">${bodyHTML}</div>
+  <div class="no-print"><button onclick="window.print()">🖨️ Print / Save PDF</button></div>
+  </body></html>`;
 
   const blob = new Blob([fullHTML], { type: 'text/html' });
   const url  = URL.createObjectURL(blob);
