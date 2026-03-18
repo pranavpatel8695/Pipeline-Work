@@ -1258,8 +1258,7 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
       padding:8px 16px;color:#E8192C;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">
       Install
     </button>
-    <button onclick="document.getElementById('_installBanner').style.display=\'none\';" style="background:transparent;border:1px solid rgba(255,255,255,0.5);border-radius:8px;
-      padding:8px 10px;color:#fff;font-size:13px;cursor:pointer;font-family:inherit">✕</button>
+    <button onclick="document.getElementById('_installBanner').style.display='none'" style="background:transparent;border:1px solid rgba(255,255,255,0.5);border-radius:8px;padding:8px 10px;color:#fff;font-size:13px;cursor:pointer;font-family:inherit">✕</button>
   </div>
 </div>
 
@@ -1638,6 +1637,76 @@ if (!_lastClean || Date.now() - parseInt(_lastClean) > 86400000) {
           <label>Remarks</label>
           <textarea id="pipe-remarks" rows="3" placeholder="Any notes..."></textarea>
         </div>
+
+        <!-- Connection at Start/End -->
+        <div style="background:rgba(10,132,255,0.07);border:1px solid rgba(10,132,255,0.25);border-radius:12px;padding:14px;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:700;color:#0A84FF;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">🔗 Connection to Header / B/F Line</div>
+
+          <!-- Start Connection -->
+          <div style="margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <div onclick="togglePipeConn('start')" id="pipe-conn-start-toggle" style="width:44px;height:26px;border-radius:13px;background:var(--border);cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0">
+                <div id="pipe-conn-start-knob" style="width:22px;height:22px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.3)"></div>
+              </div>
+              <span style="font-size:13px;font-weight:600;color:var(--text)">Connection at Starting Point</span>
+            </div>
+            <div id="pipe-conn-start-details" style="display:none;padding-left:0">
+              <div class="field-group" style="margin-bottom:8px">
+                <label>Connection Type</label>
+                <div style="display:flex;gap:8px">
+                  <div class="radio-opt" onclick="selectPipeConnType('start','Header Line',this)" style="flex:1;text-align:center">Header Line</div>
+                  <div class="radio-opt" onclick="selectPipeConnType('start','B/F Line',this)" style="flex:1;text-align:center">B/F Line</div>
+                </div>
+                <input type="hidden" id="pipe-conn-start-type" value="">
+              </div>
+              <div class="field-group" style="margin-bottom:8px">
+                <label>Remarks</label>
+                <input type="text" id="pipe-conn-start-remarks" placeholder="e.g. Connected to 600mm header at pump station">
+              </div>
+              <div class="field-group" style="margin-bottom:0">
+                <label>Photo</label>
+                <div class="photo-input-wrap" onclick="document.getElementById('pipe-conn-start-photo').click()">
+                  <div class="pi-icon">📷</div><p>Tap to capture photo</p>
+                  <input type="file" id="pipe-conn-start-photo" accept="image/*" onchange="previewPhotosGPS(this,'pipe-conn-start-prev','','')">
+                </div>
+                <div class="photo-previews" id="pipe-conn-start-prev"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- End Connection -->
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <div onclick="togglePipeConn('end')" id="pipe-conn-end-toggle" style="width:44px;height:26px;border-radius:13px;background:var(--border);cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0">
+                <div id="pipe-conn-end-knob" style="width:22px;height:22px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.3)"></div>
+              </div>
+              <span style="font-size:13px;font-weight:600;color:var(--text)">Connection at Ending Point</span>
+            </div>
+            <div id="pipe-conn-end-details" style="display:none">
+              <div class="field-group" style="margin-bottom:8px">
+                <label>Connection Type</label>
+                <div style="display:flex;gap:8px">
+                  <div class="radio-opt" onclick="selectPipeConnType('end','Header Line',this)" style="flex:1;text-align:center">Header Line</div>
+                  <div class="radio-opt" onclick="selectPipeConnType('end','B/F Line',this)" style="flex:1;text-align:center">B/F Line</div>
+                </div>
+                <input type="hidden" id="pipe-conn-end-type" value="">
+              </div>
+              <div class="field-group" style="margin-bottom:8px">
+                <label>Remarks</label>
+                <input type="text" id="pipe-conn-end-remarks" placeholder="e.g. Connected to B/F line at ESR">
+              </div>
+              <div class="field-group" style="margin-bottom:0">
+                <label>Photo</label>
+                <div class="photo-input-wrap" onclick="document.getElementById('pipe-conn-end-photo').click()">
+                  <div class="pi-icon">📷</div><p>Tap to capture photo</p>
+                  <input type="file" id="pipe-conn-end-photo" accept="image/*" onchange="previewPhotosGPS(this,'pipe-conn-end-prev','','')">
+                </div>
+                <div class="photo-previews" id="pipe-conn-end-prev"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="submit-row">
           <button class="btn-secondary" onclick="cancelForm()">Cancel</button>
           <button class="btn-primary flex1" onclick="submitReport('pipe')">Submit Report ✓</button>
@@ -3021,6 +3090,18 @@ function cancelForm() {
   try { document.getElementById('fit-type-other').style.display = 'none'; } catch(e){}
   try { populateFitTypeDropdown(); } catch(e){}
   try { document.getElementById('precast-kept-wrap').style.display = 'none'; } catch(e){}
+  // Reset pipe connection toggles
+  ['start','end'].forEach(function(s) {
+    try {
+      document.getElementById('pipe-conn-'+s+'-knob').style.left='2px';
+      document.getElementById('pipe-conn-'+s+'-toggle').style.background='var(--border)';
+      document.getElementById('pipe-conn-'+s+'-details').style.display='none';
+      document.getElementById('pipe-conn-'+s+'-type').value='';
+      document.getElementById('pipe-conn-'+s+'-remarks').value='';
+      document.getElementById('pipe-conn-'+s+'-prev').innerHTML='';
+      document.querySelectorAll('#pipe-conn-'+s+'-details .radio-opt').forEach(e=>e.classList.remove('selected'));
+    } catch(e){}
+  });
   try { document.getElementById('str-est-conc-display').textContent = '—'; } catch(e){}
   try { var d=document.getElementById('str-conc-diff'); d.innerHTML=''; d.style.display='none'; } catch(e){}
   ['exc','pipe','ref'].forEach(function(p) {
@@ -4093,6 +4174,21 @@ function selectValveChamber(el, val) {
   document.getElementById('val-chamber-req').value = val;
 }
 
+function togglePipeConn(side) {
+  const toggle  = document.getElementById('pipe-conn-'+side+'-toggle');
+  const knob    = document.getElementById('pipe-conn-'+side+'-knob');
+  const details = document.getElementById('pipe-conn-'+side+'-details');
+  const on = knob.style.left === '20px';
+  knob.style.left    = on ? '2px' : '20px';
+  toggle.style.background = on ? 'var(--border)' : '#0A84FF';
+  details.style.display   = on ? 'none' : 'block';
+}
+function selectPipeConnType(side, val, el) {
+  document.querySelectorAll('#pipe-conn-'+side+'-details .radio-opt').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('pipe-conn-'+side+'-type').value = val;
+}
+
 function selectThrustBlock(el, val) {
   el.closest('.field-group').querySelectorAll('.radio-opt').forEach(e => e.classList.remove('selected'));
   el.classList.add('selected');
@@ -4281,6 +4377,19 @@ function submitReport(type) {
     data.actualConc = null; // never set actual from pipe form
     data.remarks     = document.getElementById('pipe-remarks').value;
     data.photosStart = collectPhotosFromPreview('pipe-photo-prev-start');
+    // Connection data
+    const connStartOn = document.getElementById('pipe-conn-start-knob')?.style.left === '20px';
+    const connEndOn   = document.getElementById('pipe-conn-end-knob')?.style.left === '20px';
+    data.connStart = connStartOn ? {
+      type:    document.getElementById('pipe-conn-start-type')?.value || '',
+      remarks: document.getElementById('pipe-conn-start-remarks')?.value || '',
+      photos:  collectPhotosFromPreview('pipe-conn-start-prev')
+    } : null;
+    data.connEnd = connEndOn ? {
+      type:    document.getElementById('pipe-conn-end-type')?.value || '',
+      remarks: document.getElementById('pipe-conn-end-remarks')?.value || '',
+      photos:  collectPhotosFromPreview('pipe-conn-end-prev')
+    } : null;
     data.photosEnd   = collectPhotosFromPreview('pipe-photo-prev-end');
 
     // ── Mandatory field validation (supervisors and PM) ──────────────────────
@@ -4965,8 +5074,9 @@ function reportListItem(r) {
               .map(e => e.type.replace(' Required','') + (e.from!=null?' Ch:'+e.from+'-'+e.to+'m':'')).join(', ')
           : (r.encasing && r.encasing !== 'Not Required' ? r.encasing.replace(' Required','') : '');
         const encStr = encList ? ' · 🧱 '+encList : ' · No Encasing';
+        const connStr = [r.connStart?'🔗 Start:'+r.connStart.type:'', r.connEnd?'🔗 End:'+r.connEnd.type:''].filter(Boolean).join(' · ');
         t = { label:'Pipe Laying', cls:'pipe', icon:'🔩',
-              info: 'Ch:'+(r.from||0)+'-'+(r.to||0)+'m · '+(r.meters||0)+'m · '+(r.size||'')+(r.material?' '+r.material:'')+encStr };
+              info: 'Ch:'+(r.from||0)+'-'+(r.to||0)+'m · '+(r.meters||0)+'m · '+(r.size||'')+(r.material?' '+r.material:'')+encStr+(connStr?' · '+connStr:'') };
         break;
       }
       case 'refill':
@@ -6075,7 +6185,7 @@ function exportPDF(mode) {
     const eR=reps.filter(r=>r.type==='excavation');
     if(eR.length){const tM=eR.reduce((s,r)=>s+(r.meters||0),0),tV=eR.reduce((s,r)=>s+(parseFloat(r.volume)||0),0);sectionsHTML+=secH('⛏️','Excavation',eR.length,`Total: ${fmtM(tM)} | Vol: ${tV.toFixed(2)} cum`,'#FF9F0A');sectionsHTML+=tblS('#FF9F0A','#','Date','Chainage (From–To)','Length','Qty (cum)','Width (m)','Depth (m)','Soil Type','Supervisor/Eng.');eR.forEach((r,i)=>{sectionsHTML+=trw(i%2,i+1,r.date||'—',`${r.from||0}m – ${r.to||0}m`,fmtM(r.meters),parseFloat(r.volume||0).toFixed(2),r.width||'—',r.depth||'—',r.soil||'—',r.supervisor||'—');});sectionsHTML+=`</tbody></table>`;}
     const pR=reps.filter(r=>r.type==='pipe');
-    if(pR.length){const tM=pR.reduce((s,r)=>s+(r.meters||0),0);sectionsHTML+=secH('🔩','Pipe Laying',pR.length,`Total: ${fmtM(tM)}`,'#0A84FF');sectionsHTML+=tblS('#0A84FF','#','Date','Chainage (From–To)','Length','Size & Material','CC/RCC Encasing','Encasing Chainage','Supervisor/Eng.');pR.forEach((r,i)=>{const eList=r.encasings&&r.encasings.length?r.encasings.filter(e=>e.type&&e.type!=='Not Required').map(e=>e.type.replace(' Required','')).filter((v,j,a)=>a.indexOf(v)===j).join(', '):(r.encasing&&r.encasing!=='Not Required'?r.encasing.replace(' Required',''):'');const eCh=r.encasings&&r.encasings.length?r.encasings.filter(e=>e.type&&e.type!=='Not Required').map(e=>`${e.from}m–${e.to}m`).join(', '):'—';const enc=eList?bdgF(eList,eList.includes('RCC')?'blue':'orange'):bdgF('Not Required','gray');sectionsHTML+=trw(i%2,i+1,r.date||'—',`${r.from||0}m – ${r.to||0}m`,fmtM(r.meters),`${r.size||'-'} ${r.material||''}`.trim(),enc,eCh||'—',r.supervisor||'—');});sectionsHTML+=`</tbody></table>`;}
+    if(pR.length){const tM=pR.reduce((s,r)=>s+(r.meters||0),0);sectionsHTML+=secH('🔩','Pipe Laying',pR.length,`Total: ${fmtM(tM)}`,'#0A84FF');sectionsHTML+=tblS('#0A84FF','#','Date','Chainage (From–To)','Length','Size & Material','CC/RCC Encasing','Encasing Chainage','Conn. Start','Conn. End','Supervisor/Eng.');pR.forEach((r,i)=>{const eList=r.encasings&&r.encasings.length?r.encasings.filter(e=>e.type&&e.type!=='Not Required').map(e=>e.type.replace(' Required','')).filter((v,j,a)=>a.indexOf(v)===j).join(', '):(r.encasing&&r.encasing!=='Not Required'?r.encasing.replace(' Required',''):'');const eCh=r.encasings&&r.encasings.length?r.encasings.filter(e=>e.type&&e.type!=='Not Required').map(e=>`${e.from}m–${e.to}m`).join(', '):'—';const enc=eList?bdgF(eList,eList.includes('RCC')?'blue':'orange'):bdgF('Not Required','gray');const cS=r.connStart?`🔗 ${r.connStart.type||'—'}${r.connStart.remarks?' · '+r.connStart.remarks:''}` :'—';const cE=r.connEnd?`🔗 ${r.connEnd.type||'—'}${r.connEnd.remarks?' · '+r.connEnd.remarks:''}` :'—';sectionsHTML+=trw(i%2,i+1,r.date||'—',`${r.from||0}m – ${r.to||0}m`,fmtM(r.meters),`${r.size||'-'} ${r.material||''}`.trim(),enc,eCh||'—',cS,cE,r.supervisor||'—');});sectionsHTML+=`</tbody></table>`;}
     const rR=reps.filter(r=>r.type==='refill');
     if(rR.length){const tM=rR.reduce((s,r)=>s+(r.meters||0),0),nV=rR.reduce((s,r)=>s+(parseFloat(r.netVol||r.volume)||0),0);sectionsHTML+=secH('🪣','Refilling',rR.length,`Total: ${fmtM(tM)} | Net: ${nV.toFixed(2)} cum`,'#30D158');sectionsHTML+=tblS('#30D158','#','Date','Chainage (From–To)','Length','Gross Qty (cum)','Net Qty (cum)','Width (m)','Depth (m)','Road Restoration','Supervisor/Eng.');rR.forEach((r,i)=>{sectionsHTML+=trw(i%2,i+1,r.date||'—',`${r.from||0}m – ${r.to||0}m`,fmtM(r.meters),parseFloat(r.volume||0).toFixed(2),parseFloat(r.netVol||r.volume||0).toFixed(2),r.width||'—',r.depth||'—',r.road||'—',r.supervisor||'—');});sectionsHTML+=`</tbody></table>`;}
     const vR=reps.filter(r=>r.type==='valve');
