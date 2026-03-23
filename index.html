@@ -1158,17 +1158,55 @@ async function fbSync() {
     console.log('Appwrite: fetched', allDocs.length, 'docs');
     const reports = allDocs.map(doc => {
       try {
-        const d = JSON.parse(doc.data_json || '{}');
-        if (doc.from_ch !== undefined) d.from = doc.from_ch;
-        if (doc.to_ch   !== undefined) d.to   = doc.to_ch;
-        if (!d.type) d.type = doc.type;
-        if (!d.project) d.project = doc.project;
-        if (!d.route) d.route = doc.route;
-        if (!d.date) d.date = doc.date;
-        if (!d.supervisor) d.supervisor = doc.supervisor;
+        let d = {};
+        // Try parsing data_json first
+        if (doc.data_json) {
+          try { d = JSON.parse(doc.data_json); } catch(e) {}
+        }
+        // Always override/fill from individual fields
+        d.type       = doc.type       || d.type       || '';
+        d.project    = doc.project    || d.project    || '';
+        d.route      = doc.route      || d.route      || '';
+        d.date       = doc.date       || d.date       || '';
+        d.supervisor = doc.supervisor || d.supervisor || '';
+        d.timestamp  = doc.timestamp  || d.timestamp  || '';
+        d.from       = doc.from_ch    !== undefined ? doc.from_ch  : (d.from  || 0);
+        d.to         = doc.to_ch      !== undefined ? doc.to_ch    : (d.to    || 0);
+        d.meters     = doc.meters     !== undefined ? doc.meters   : (d.meters|| 0);
+        d.volume     = doc.volume     !== undefined ? doc.volume   : (d.volume|| 0);
+        d.width      = doc.width      !== undefined ? doc.width    : (d.width || 0);
+        d.depth      = doc.depth      !== undefined ? doc.depth    : (d.depth || 0);
+        d.soil       = doc.soil       || d.soil       || '';
+        d.size       = doc.size       || d.size       || '';
+        d.material   = doc.material   || d.material   || '';
+        d.encasing   = doc.encasing   || d.encasing   || '';
+        d.road       = doc.road       || d.road       || '';
+        d.chainage   = doc.chainage   !== undefined ? doc.chainage : (d.chainage || 0);
+        d.valType    = doc.valType    || d.valType    || '';
+        d.chamberReq = doc.chamberReq || d.chamberReq || '';
+        d.chamType   = doc.chamType   || d.chamType   || '';
+        d.chamStatus = doc.chamStatus || d.chamStatus || '';
+        d.slab       = doc.slab       || d.slab       || '';
+        d.slabKept   = doc.slabKept   || d.slabKept   || '';
+        d.fitType    = doc.fitType    || d.fitType    || '';
+        d.thrustBlock= doc.thrustBlock|| d.thrustBlock|| '';
+        d.qty        = doc.qty        !== undefined ? doc.qty      : (d.qty   || 1);
+        d.special    = doc.special    || d.special    || '';
+        d.strType    = doc.strType    || d.strType    || '';
+        d.workStatus = doc.workStatus || d.workStatus || '';
+        d.remarks    = doc.remarks    || d.remarks    || '';
+        d.estConc    = doc.estConc    !== undefined ? doc.estConc  : (d.estConc || 0);
+        d.actualConc = doc.actualConc !== undefined ? doc.actualConc:(d.actualConc||0);
+        d.netVol     = doc.netVol     !== undefined ? doc.netVol   : (d.netVol || 0);
+        // Parse JSON arrays
+        if (doc.encasings)   try { d.encasings   = JSON.parse(doc.encasings);   } catch(e){}
+        if (doc.valves)      try { d.valves      = JSON.parse(doc.valves);      } catch(e){}
+        if (doc.connections) try { d.connections = JSON.parse(doc.connections); } catch(e){}
+        // Use Appwrite doc ID as report id if missing
+        if (!d.id) d.id = doc.$id;
         return d;
       } catch(e) { return null; }
-    }).filter(Boolean);
+    }).filter(r => r && r.type);
     console.log('Appwrite: parsed', reports.length, 'reports');
 
     // Push local-only reports (skip during initial load to avoid errors)
