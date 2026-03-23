@@ -1223,6 +1223,7 @@ async function fbSync() {
     }
 
     fbUpdateStatus('synced');
+    populateAllProjectDropdowns();
     updateDashboard();
     if (typeof renderAllReports === 'function') renderAllReports();
     if (typeof renderTracker    === 'function') renderTracker();
@@ -1264,6 +1265,7 @@ async function fbPullConfig() {
     const res = await awRequest('GET',
       `/databases/${AW_DATABASE}/collections/${AW_CONFIG_COL}/documents/adminData`
     );
+    console.log('Config pull result:', res ? 'found' : 'not found', res?.value?.slice?.(0,100));
     if (!res || !res.value) return;
     const d = JSON.parse(res.value);
     if (d.projects)    localStorage.setItem('aquatrack_projects',    JSON.stringify(d.projects));
