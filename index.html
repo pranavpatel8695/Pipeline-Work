@@ -1153,10 +1153,10 @@ async function fbSync() {
     }
 
     // Convert Appwrite docs back to app format
+    console.log('Appwrite: fetched', allDocs.length, 'docs');
     const reports = allDocs.map(doc => {
       try {
         const d = JSON.parse(doc.data_json || '{}');
-        // Restore numeric from fields
         if (doc.from_ch !== undefined) d.from = doc.from_ch;
         if (doc.to_ch   !== undefined) d.to   = doc.to_ch;
         if (!d.type) d.type = doc.type;
@@ -1167,6 +1167,7 @@ async function fbSync() {
         return d;
       } catch(e) { return null; }
     }).filter(Boolean);
+    console.log('Appwrite: parsed', reports.length, 'reports');
 
     // Push local-only reports (skip during initial load to avoid errors)
     const local = JSON.parse(localStorage.getItem('aquatrack_reports') || '[]');
