@@ -1265,7 +1265,9 @@ async function fbSync() {
     fbUpdateStatus('offline');
   }
   _syncInProgress = false;
-} ─────────────────────────────────────────
+}
+
+// ── Push admin config to Appwrite ─────────────────────────────────────────
 function fbPushAdminData() {
   if (currentRole !== 'admin' && currentRole !== 'pm') return;
   const data = {
