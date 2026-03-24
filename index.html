@@ -1669,20 +1669,20 @@ console.log('Appwrite configured ✅');
         </div>
         <input type="hidden" id="exc-lat"><input type="hidden" id="exc-lon">
         <div class="field-group">
-          <label>Starting Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 2</span></label>
+          <label>Starting Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 1</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('exc-photos-start').click()">
             <div class="pi-icon">📷</div><p>Tap to add photos</p>
-            <input type="file" id="exc-photos-start" multiple accept="image/*"
+            <input type="file" id="exc-photos-start" accept="image/*"
               onchange="limitPhotos(this,1);previewPhotosGPS(this,'exc-photo-prev-start','exc-lat','exc-lon')">
           </div>
           <div class="photo-previews" id="exc-photo-prev-start"></div>
         </div>
         <input type="hidden" id="exc-lat2"><input type="hidden" id="exc-lon2">
         <div class="field-group">
-          <label>Ending Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 2</span></label>
+          <label>Ending Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 1</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('exc-photos-end').click()">
             <div class="pi-icon">📷</div><p>Tap to add photos</p>
-            <input type="file" id="exc-photos-end" multiple accept="image/*"
+            <input type="file" id="exc-photos-end" accept="image/*"
               onchange="limitPhotos(this,1);previewPhotosGPS(this,'exc-photo-prev-end','exc-lat2','exc-lon2')">
           </div>
           <div class="photo-previews" id="exc-photo-prev-end"></div>
@@ -1742,20 +1742,20 @@ console.log('Appwrite configured ✅');
         </div>
 <input type="hidden" id="pipe-lat"><input type="hidden" id="pipe-lon">
         <div class="field-group">
-          <label>Starting Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 2</span></label>
+          <label>Starting Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 1</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('pipe-photos-start').click()">
             <div class="pi-icon">📷</div><p>Tap to add photos</p>
-            <input type="file" id="pipe-photos-start" multiple accept="image/*"
+            <input type="file" id="pipe-photos-start" accept="image/*"
               onchange="limitPhotos(this,1);previewPhotosGPS(this,'pipe-photo-prev-start','pipe-lat','pipe-lon')">
           </div>
           <div class="photo-previews" id="pipe-photo-prev-start"></div>
         </div>
 <input type="hidden" id="pipe-lat2"><input type="hidden" id="pipe-lon2">
         <div class="field-group">
-          <label>Ending Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 2</span></label>
+          <label>Ending Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 1</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('pipe-photos-end').click()">
             <div class="pi-icon">📷</div><p>Tap to add photos</p>
-            <input type="file" id="pipe-photos-end" multiple accept="image/*"
+            <input type="file" id="pipe-photos-end" accept="image/*"
               onchange="limitPhotos(this,1);previewPhotosGPS(this,'pipe-photo-prev-end','pipe-lat2','pipe-lon2')">
           </div>
           <div class="photo-previews" id="pipe-photo-prev-end"></div>
@@ -1866,20 +1866,20 @@ console.log('Appwrite configured ✅');
         </div>
 <input type="hidden" id="ref-lat"><input type="hidden" id="ref-lon">
         <div class="field-group">
-          <label>Starting Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 2</span></label>
+          <label>Starting Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 1</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('ref-photos-start').click()">
             <div class="pi-icon">📷</div><p>Tap to add photos</p>
-            <input type="file" id="ref-photos-start" multiple accept="image/*"
+            <input type="file" id="ref-photos-start" accept="image/*"
               onchange="limitPhotos(this,1);previewPhotosGPS(this,'ref-photo-prev-start','ref-lat','ref-lon')">
           </div>
           <div class="photo-previews" id="ref-photo-prev-start"></div>
         </div>
 <input type="hidden" id="ref-lat2"><input type="hidden" id="ref-lon2">
         <div class="field-group">
-          <label>Ending Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 2</span></label>
+          <label>Ending Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 1</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('ref-photos-end').click()">
             <div class="pi-icon">📷</div><p>Tap to add photos</p>
-            <input type="file" id="ref-photos-end" multiple accept="image/*"
+            <input type="file" id="ref-photos-end" accept="image/*"
               onchange="limitPhotos(this,1);previewPhotosGPS(this,'ref-photo-prev-end','ref-lat2','ref-lon2')">
           </div>
           <div class="photo-previews" id="ref-photo-prev-end"></div>
@@ -1932,7 +1932,7 @@ console.log('Appwrite configured ✅');
           <label>Photos</label>
           <div class="photo-input-wrap" onclick="document.getElementById('val-photos').click()">
             <div class="pi-icon">📷</div><p>Tap to add photos</p>
-            <input type="file" id="val-photos" multiple accept="image/*" onchange="previewPhotosGPS(this,'val-photo-prev','val-lat','val-lon')">
+            <input type="file" id="val-photos" accept="image/*" onchange="previewPhotosGPS(this,'val-photo-prev','val-lat','val-lon')">
           </div>
           <div class="photo-previews" id="val-photo-prev"></div>
         </div>
@@ -2042,7 +2042,7 @@ console.log('Appwrite configured ✅');
           <label>Photos</label>
           <div class="photo-input-wrap" onclick="document.getElementById('cham-photos').click()">
             <div class="pi-icon">📷</div><p>Tap to add photos</p>
-            <input type="file" id="cham-photos" multiple accept="image/*"
+            <input type="file" id="cham-photos" accept="image/*"
               onchange="previewPhotosGPS(this,'cham-photo-prev','cham-lat','cham-lon')">
           </div>
           <div class="photo-previews" id="cham-photo-prev"></div>
@@ -2222,7 +2222,7 @@ console.log('Appwrite configured ✅');
           <label>Photos</label>
           <div class="photo-input-wrap" onclick="document.getElementById('str-photos').click()">
             <div class="pi-icon">📷</div><p>Tap to add photos</p>
-            <input type="file" id="str-photos" multiple accept="image/*"
+            <input type="file" id="str-photos" accept="image/*"
               onchange="previewPhotosGPS(this,'str-photo-prev','str-lat','str-lon')">
           </div>
           <div class="photo-previews" id="str-photo-prev"></div>
@@ -2301,7 +2301,7 @@ console.log('Appwrite configured ✅');
           <div class="photo-input-wrap" onclick="document.getElementById('fit-photos').click()">
             <div class="pi-icon">📷</div>
             <p>Tap to capture / select photos</p>
-            <input type="file" id="fit-photos" multiple accept="image/*" onchange="previewPhotosGPS(this,'fit-photo-prev','fit-lat','fit-lon')">
+            <input type="file" id="fit-photos" accept="image/*" onchange="previewPhotosGPS(this,'fit-photo-prev','fit-lat','fit-lon')">
           </div>
           <div class="photo-previews" id="fit-photo-prev"></div>
         </div>
