@@ -1130,15 +1130,35 @@ async function fbSaveReport(data) {
 
 // ── Delete report ──────────────────────────────────────────────────────────
 async function fbDeleteReport(id) {
-  const docId = 'r' + String(id).replace(/[^a-zA-Z0-9]/g,'').slice(0,30);
+  // Check if report has Appwrite ID stored
+  const local = JSON.parse(localStorage.getItem('aquatrack_reports') || '[]');
+  const rep = local.find(r => String(r.id) === String(id));
+  const awId = rep?._awId || ('r' + String(id).replace(/[^a-zA-Z0-9]/g,'').slice(0,30));
+
   const result = await awRequest('DELETE',
-    `/databases/${AW_DATABASE}/collections/${AW_COLLECTION}/documents/${docId}`
+    `/databases/${AW_DATABASE}/collections/${AW_COLLECTION}/documents/${awId}`
   );
-  return result !== null;
+  if (result !== null) return true;
+
+  // Fallback: scan all docs
+  const res = await awRequest('GET', `/databases/${AW_DATABASE}/collections/${AW_COLLECTION}/documents?limit=100`);
+  if (res?.documents) {
+    const match = res.documents.find(d => {
+      try { return String(JSON.parse(d.data_json||'{}').id) === String(id); } catch(e){ return false; }
+    });
+    if (match) {
+      const r2 = await awRequest('DELETE', `/databases/${AW_DATABASE}/collections/${AW_COLLECTION}/documents/${match.$id}`);
+      return r2 !== null;
+    }
+  }
+  return false;
 }
 
 // ── Sync: pull all reports from Appwrite ──────────────────────────────────
+let _syncInProgress = false;
 async function fbSync() {
+  if (_syncInProgress) return;
+  _syncInProgress = true;
   console.log('fbSync started');
   fbUpdateStatus('syncing');
   try {
@@ -1204,6 +1224,7 @@ async function fbSync() {
         if (doc.connections) try { d.connections = JSON.parse(doc.connections); } catch(e){}
         // Use Appwrite doc ID as report id if missing
         if (!d.id) d.id = doc.$id;
+        d._awId = doc.$id; // store Appwrite doc ID for deletes
         return d;
       } catch(e) { return null; }
     }).filter(r => r && r.type);
@@ -1243,9 +1264,8 @@ async function fbSync() {
     console.warn('Sync failed:', e);
     fbUpdateStatus('offline');
   }
-}
-
-// ── Push admin config to Appwrite ─────────────────────────────────────────
+  _syncInProgress = false;
+} ─────────────────────────────────────────
 function fbPushAdminData() {
   if (currentRole !== 'admin' && currentRole !== 'pm') return;
   const data = {
