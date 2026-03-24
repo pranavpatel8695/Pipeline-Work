@@ -1321,7 +1321,16 @@ async function fbPullConfig() {
     if (d.routes && Object.keys(d.routes).length) localStorage.setItem('aquatrack_routes', JSON.stringify(d.routes));
     if (d.assignments && Object.keys(d.assignments).length) localStorage.setItem('aquatrack_assignments', JSON.stringify(d.assignments));
     if (d.specials)    localStorage.setItem('aquatrack_specials',    JSON.stringify(d.specials));
-    // Note: users NOT pulled from Appwrite — managed locally to prevent corruption
+    // Sync non-admin users from Appwrite
+    if (d.users && Object.keys(d.users).length > 0) {
+      const existing = JSON.parse(localStorage.getItem('aquatrack_users') || '{}');
+      const adminLocal = existing['admin']; // preserve local admin
+      Object.keys(d.users).forEach(u => {
+        if (d.users[u].role !== 'admin') existing[u] = d.users[u];
+      });
+      if (adminLocal) existing['admin'] = adminLocal; // never overwrite admin from Appwrite
+      localStorage.setItem('aquatrack_users', JSON.stringify(existing));
+    }
   } catch(e) { console.warn('Config pull failed:', e); }
 }
 
