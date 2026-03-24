@@ -1243,29 +1243,23 @@ async function fbSync() {
     // Also pull config
     await fbPullConfig();
 
-    // Remote is truth — deduplicate and keep local-only
     const blacklist = new Set(JSON.parse(localStorage.getItem('aquatrack_deleted') || '[]'));
-    const deduped = Object.values(
-      reports.reduce((m, r) => {
-        if (r.id && !blacklist.has(String(r.id))) m[String(r.id)] = r;
-        return m;
-      }, {})
-    );
-    // Keep local-only reports not yet synced to Appwrite
     const local = JSON.parse(localStorage.getItem('aquatrack_reports') || '[]');
-    const remoteIds = new Set(deduped.map(r => String(r.id)));
-    const localOnly = local.filter(r => r.id && !remoteIds.has(String(r.id)) && !blacklist.has(String(r.id)));
-    const finalReports = [...deduped, ...localOnly];
-    // Safety: never wipe all reports if Appwrite returned 0 but local has data
-    if (finalReports.length === 0 && local.length > 0) {
-      console.warn('Sync would wipe local data — skipping save, uploading local to Appwrite');
-      for (const r of local.filter(r => !blacklist.has(String(r.id)))) {
-        try { await fbSaveReport(r); } catch(e) {}
-      }
-    } else {
-      localStorage.setItem('aquatrack_reports', JSON.stringify(finalReports));
-      for (const r of localOnly) { try { await fbSaveReport(r); } catch(e) {} }
-    }
+
+    // Build merged map: start with local, overlay with Appwrite
+    const merged = {};
+    // Add local reports first
+    local.forEach(r => { if (r.id && !blacklist.has(String(r.id))) merged[String(r.id)] = r; });
+    // Overlay with Appwrite reports (more authoritative)
+    reports.forEach(r => { if (r.id && !blacklist.has(String(r.id))) merged[String(r.id)] = r; });
+
+    const finalReports = Object.values(merged);
+    localStorage.setItem('aquatrack_reports', JSON.stringify(finalReports));
+
+    // Upload any local-only reports to Appwrite
+    const remoteIds = new Set(reports.map(r => String(r.id)));
+    const toUpload = local.filter(r => r.id && !remoteIds.has(String(r.id)) && !blacklist.has(String(r.id)));
+    for (const r of toUpload) { try { await fbSaveReport(r); } catch(e) {} }
 
     // Don't overwrite projects if they exist locally
     const localProjects = JSON.parse(localStorage.getItem('aquatrack_projects') || '[]');
