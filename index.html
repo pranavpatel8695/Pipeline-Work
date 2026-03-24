@@ -1130,26 +1130,36 @@ async function fbSaveReport(data) {
 
 // ── Delete report ──────────────────────────────────────────────────────────
 async function fbDeleteReport(id) {
-  // Check if report has Appwrite ID stored
+  const sid = String(id);
+  // Check if report has Appwrite ID stored locally
   const local = JSON.parse(localStorage.getItem('aquatrack_reports') || '[]');
-  const rep = local.find(r => String(r.id) === String(id));
-  const awId = rep?._awId || ('r' + String(id).replace(/[^a-zA-Z0-9]/g,'').slice(0,30));
+  const rep = local.find(r => String(r.id) === sid);
 
-  const result = await awRequest('DELETE',
-    `/databases/${AW_DATABASE}/collections/${AW_COLLECTION}/documents/${awId}`
-  );
-  if (result !== null) return true;
+  // Try stored _awId first
+  if (rep?._awId) {
+    const r = await awRequest('DELETE', `/databases/${AW_DATABASE}/collections/${AW_COLLECTION}/documents/${rep._awId}`);
+    if (r !== null) return true;
+  }
 
-  // Fallback: scan all docs
-  const res = await awRequest('GET', `/databases/${AW_DATABASE}/collections/${AW_COLLECTION}/documents?limit=100`);
-  if (res?.documents) {
+  // Try computed docId
+  const docId = 'r' + sid.replace(/[^a-zA-Z0-9]/g,'').slice(0,30);
+  const r2 = await awRequest('DELETE', `/databases/${AW_DATABASE}/collections/${AW_COLLECTION}/documents/${docId}`);
+  if (r2 !== null) return true;
+
+  // Scan all docs for matching id in data_json
+  let offset = 0;
+  while (true) {
+    const res = await awRequest('GET', `/databases/${AW_DATABASE}/collections/${AW_COLLECTION}/documents?limit=100&offset=${offset}`);
+    if (!res?.documents?.length) break;
     const match = res.documents.find(d => {
-      try { return String(JSON.parse(d.data_json||'{}').id) === String(id); } catch(e){ return false; }
+      try { return String(JSON.parse(d.data_json||'{}').id) === sid; } catch(e){ return false; }
     });
     if (match) {
-      const r2 = await awRequest('DELETE', `/databases/${AW_DATABASE}/collections/${AW_COLLECTION}/documents/${match.$id}`);
-      return r2 !== null;
+      const r3 = await awRequest('DELETE', `/databases/${AW_DATABASE}/collections/${AW_COLLECTION}/documents/${match.$id}`);
+      return r3 !== null;
     }
+    if (res.documents.length < 100) break;
+    offset += 100;
   }
   return false;
 }
