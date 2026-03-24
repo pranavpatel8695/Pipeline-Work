@@ -1293,18 +1293,18 @@ function fbPushAdminData() {
     users:       getUsers(),
     updatedAt:   Date.now()
   };
-  awRequest('PATCH',
-    `/databases/${AW_DATABASE}/collections/${AW_CONFIG_COL}/documents/adminData`,
-    { data: { key: 'adminData', value: JSON.stringify(data).slice(0,65000) } }
-  ).then(res => {
-    if (!res) {
-      awRequest('POST',
-        `/databases/${AW_DATABASE}/collections/${AW_CONFIG_COL}/documents`,
-        { documentId: 'adminData', data: { key: 'adminData', value: JSON.stringify(data).slice(0,65000) },
-          permissions: ['read("any")','update("any")','delete("any")'] }
+  const upsert = (docId, value) => {
+    awRequest('PATCH', `/databases/${AW_DATABASE}/collections/${AW_CONFIG_COL}/documents/${docId}`,
+      { data: { key: docId, value } }
+    ).then(res => {
+      if (!res) awRequest('POST', `/databases/${AW_DATABASE}/collections/${AW_CONFIG_COL}/documents`,
+        { documentId: docId, data: { key: docId, value }, permissions: ['read("any")','update("any")','delete("any")'] }
       );
-    }
-  });
+    });
+  };
+  upsert('adminData', JSON.stringify(data).slice(0,65000));
+  // Store users separately to avoid truncation
+  upsert('usersData', JSON.stringify({users: getUsers(), updatedAt: Date.now()}));
 }
 
 // ── Pull admin config from Appwrite ───────────────────────────────────────
@@ -1331,6 +1331,20 @@ async function fbPullConfig() {
       if (adminLocal) existing['admin'] = adminLocal; // never overwrite admin from Appwrite
       localStorage.setItem('aquatrack_users', JSON.stringify(existing));
     }
+    // Also pull users from separate document
+    try {
+      const ures = await awRequest('GET', `/databases/${AW_DATABASE}/collections/${AW_CONFIG_COL}/documents/usersData`);
+      if (ures?.value) {
+        const ud = JSON.parse(ures.value);
+        if (ud.users && Object.keys(ud.users).length > 0) {
+          const existing = JSON.parse(localStorage.getItem('aquatrack_users') || '{}');
+          const adminLocal = existing['admin'];
+          Object.keys(ud.users).forEach(u => { if (ud.users[u].role !== 'admin') existing[u] = ud.users[u]; });
+          if (adminLocal) existing['admin'] = adminLocal;
+          localStorage.setItem('aquatrack_users', JSON.stringify(existing));
+        }
+      }
+    } catch(e) {}
   } catch(e) { console.warn('Config pull failed:', e); }
 }
 
@@ -2897,10 +2911,18 @@ function doLogin() {
     if (users2[user] && users2[user].pass === pass) {
       _doLoginSuccess(user);
     } else {
-      alert('Incorrect username or password.');
+      // Try case-insensitive username match
+      const userLower = user.toLowerCase();
+      const matchKey = Object.keys(users2).find(k => k.toLowerCase() === userLower);
+      if (matchKey && users2[matchKey].pass === pass) {
+        _doLoginSuccess(matchKey);
+      } else {
+        alert('Incorrect username or password.');
+      }
     }
-  }).catch(function() {
-    alert('Incorrect username or password.');
+  }).catch(function(e) {
+    console.warn('Login fallback failed:', e);
+    alert('Incorrect username or password. Check internet connection.');
   });
 }
 
