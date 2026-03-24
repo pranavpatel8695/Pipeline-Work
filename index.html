@@ -1256,9 +1256,16 @@ async function fbSync() {
     const remoteIds = new Set(deduped.map(r => String(r.id)));
     const localOnly = local.filter(r => r.id && !remoteIds.has(String(r.id)) && !blacklist.has(String(r.id)));
     const finalReports = [...deduped, ...localOnly];
-    localStorage.setItem('aquatrack_reports', JSON.stringify(finalReports));
-    // Upload local-only reports to Appwrite
-    for (const r of localOnly) { try { await fbSaveReport(r); } catch(e) {} }
+    // Safety: never wipe all reports if Appwrite returned 0 but local has data
+    if (finalReports.length === 0 && local.length > 0) {
+      console.warn('Sync would wipe local data — skipping save, uploading local to Appwrite');
+      for (const r of local.filter(r => !blacklist.has(String(r.id)))) {
+        try { await fbSaveReport(r); } catch(e) {}
+      }
+    } else {
+      localStorage.setItem('aquatrack_reports', JSON.stringify(finalReports));
+      for (const r of localOnly) { try { await fbSaveReport(r); } catch(e) {} }
+    }
 
     // Don't overwrite projects if they exist locally
     const localProjects = JSON.parse(localStorage.getItem('aquatrack_projects') || '[]');
