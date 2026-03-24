@@ -3373,6 +3373,11 @@ function _doEditReport(id) {
   const set = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
 
   set(pfx+'-project', r.project);
+  // Force project selection for PM (dropdown may not have all options yet)
+  setTimeout(function() {
+    const el = document.getElementById(pfx+'-project');
+    if (el && !el.value) el.value = r.project;
+  }, 150);
   updateRoutes(pfx);
   set(pfx+'-date', r.date);
   set(pfx+'-lat', r.lat || '');
@@ -3480,6 +3485,41 @@ function _doEditReport(id) {
   // Change submit button text
   const btn = document.querySelector(`#form-${r.type} .btn-primary.flex1`);
   if (btn) { btn.textContent = '✓ Update Report'; btn.dataset.editing = '1'; }
+
+  // Restore photos
+  function restorePhotos(photos, previewId) {
+    const prev = document.getElementById(previewId);
+    if (!prev || !photos || !photos.length) return;
+    prev.innerHTML = '';
+    photos.forEach(function(p) {
+      const src = typeof p === 'string' ? p : p.src;
+      if (!src) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'photo-preview-wrap';
+      const img = document.createElement('img');
+      img.className = 'photo-preview';
+      img.src = src;
+      const rm = document.createElement('button');
+      rm.innerHTML = '✕'; rm.className = 'photo-remove-btn';
+      rm.onclick = function() { wrap.remove(); };
+      wrap.appendChild(img); wrap.appendChild(rm);
+      prev.appendChild(wrap);
+    });
+  }
+  setTimeout(function() {
+    const typeMap = {
+      excavation: [['photosStart','exc-photo-prev-start'],['photosEnd','exc-photo-prev-end']],
+      pipe:       [['photosStart','pipe-photo-prev-start'],['photosEnd','pipe-photo-prev-end']],
+      refill:     [['photosStart','ref-photo-prev-start'],['photosEnd','ref-photo-prev-end']],
+      valve:      [['photos','val-photo-prev']],
+      chamber:    [['photos','cham-photo-prev']],
+      structure:  [['photos','str-photo-prev']],
+      fitting:    [['photos','fit-photo-prev']],
+    };
+    (typeMap[r.type] || []).forEach(function(pair) {
+      restorePhotos(r[pair[0]], pair[1]);
+    });
+  }, 200);
 
   showToast('Editing report — make changes and submit');
 }
