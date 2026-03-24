@@ -1240,11 +1240,6 @@ async function fbSync() {
     }).filter(r => r && r.type);
     console.log('Appwrite: parsed', reports.length, 'reports');
 
-    // Push local-only reports (skip during initial load to avoid errors)
-    const local = JSON.parse(localStorage.getItem('aquatrack_reports') || '[]');
-    const remoteIds = new Set(allDocs.map(d => d.$id));
-    // Don't upload during sync — just merge
-
     // Also pull config
     await fbPullConfig();
 
