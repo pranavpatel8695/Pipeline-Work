@@ -3006,7 +3006,7 @@ document.getElementById('loginPass').addEventListener('keydown', e => { if (e.ke
 function initApp() {
   fbInit();
   // fbSync already called during login — schedule next sync
-  if (navigator.onLine) setTimeout(fbSync, 5000);
+  if (navigator.onLine) setTimeout(fbSync, 15000);
   const info = getUsers()[currentUser];
   document.getElementById('avatarEl').textContent = info.name[0];
   const badge = document.getElementById('roleBadge');
@@ -5235,16 +5235,19 @@ function deleteReport(id) {
   const r = reports.find(function(x) { return String(x.id) === String(id); });
   if (!r) { showToast('Report not found'); return; }
 
-  // Hard block if dependents exist
+  // Hard block if dependents exist (skip for admin force-delete)
   var depCheck = checkDeleteDependency(r);
-  if (depCheck.blocked) {
+  if (depCheck.blocked && currentRole !== 'admin') {
     showBlockedModal('Cannot Delete', depCheck.reason);
     return;
   }
+  var confirmMsg = depCheck.blocked
+    ? 'This report has dependencies. Force delete anyway? · ' + r.date
+    : 'Delete this ' + (r.type||'') + ' report? Ch:'+(r.from||'-')+'–'+(r.to||r.chainage||'-')+'m · '+r.date+' · Cannot be undone.';
 
   showConfirmModal(
     'Delete Report',
-    'Delete this ' + (r.type||'') + ' report? Ch:'+(r.from||'-')+'–'+(r.to||r.chainage||'-')+'m · '+r.date+' · Cannot be undone.',
+    confirmMsg,
     function() {
       var updated = getReports().filter(function(x) { return String(x.id) !== String(id); });
       localStorage.setItem('aquatrack_reports', JSON.stringify(updated));
