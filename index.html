@@ -1103,7 +1103,7 @@ async function fbSaveReport(data) {
     };
 
     // Use report id as document ID
-    const docId = 'r' + String(d.id).replace(/[^a-zA-Z0-9]/g,'').slice(0,30);
+    const docId = 'r' + String(d.id).replace(/[^a-zA-Z0-9]/g,'').replace(/^r+/,'').slice(0,30);
 
     // Try update first
     let result = await awRequest('PATCH',
@@ -1142,7 +1142,7 @@ async function fbDeleteReport(id) {
   }
 
   // Try computed docId
-  const docId = 'r' + sid.replace(/[^a-zA-Z0-9]/g,'').slice(0,30);
+  const docId = 'r' + sid.replace(/[^a-zA-Z0-9]/g,'').replace(/^r+/,'').slice(0,30);
   const r2 = await awRequest('DELETE', `/databases/${AW_DATABASE}/collections/${AW_COLLECTION}/documents/${docId}`);
   if (r2 !== null) return true;
 
