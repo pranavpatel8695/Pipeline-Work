@@ -1249,9 +1249,13 @@ async function fbSync() {
     await fbPullConfig();
 
     // Remote is truth — deduplicate and save
+    const blacklist = new Set(JSON.parse(localStorage.getItem('aquatrack_deleted') || '[]'));
     if (reports.length > 0) {
       const deduped = Object.values(
-        reports.reduce((m, r) => { if (r.id) m[String(r.id)] = r; return m; }, {})
+        reports.reduce((m, r) => {
+          if (r.id && !blacklist.has(String(r.id))) m[String(r.id)] = r;
+          return m;
+        }, {})
       );
       localStorage.setItem('aquatrack_reports', JSON.stringify(deduped));
     }
@@ -5256,6 +5260,10 @@ function deleteReport(id) {
       refreshMapPins();
       if (typeof renderTracker === 'function') renderTracker();
       showToast('🗑️ Deleted');
+      // Add to delete blacklist so fbSync won't restore it
+      const blacklist = JSON.parse(localStorage.getItem('aquatrack_deleted') || '[]');
+      if (!blacklist.includes(String(id))) blacklist.push(String(id));
+      localStorage.setItem('aquatrack_deleted', JSON.stringify(blacklist));
       fbUpdateStatus('saving');
       fbDeleteReport(id).then(function(ok) {
         fbUpdateStatus(ok ? 'synced' : 'offline');
