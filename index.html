@@ -4388,10 +4388,7 @@ function submitReport(type) {
     data.width    = parseFloat(document.getElementById('exc-width').value) || null;
     data.depth    = parseFloat(document.getElementById('exc-depth').value) || null;
     data.volume   = parseFloat(document.getElementById('exc-volume').value) || null;
-    data.lat      = parseFloat(document.getElementById('exc-lat').value) || null;
-    data.lon      = parseFloat(document.getElementById('exc-lon').value) || null;
-    data.lat2     = parseFloat(document.getElementById('exc-lat2').value) || null;
-    data.lon2     = parseFloat(document.getElementById('exc-lon2').value) || null;
+
     data.remarks     = document.getElementById('exc-remarks').value;
     data.photosStart = collectPhotosFromPreview('exc-photo-prev-start');
     data.photosEnd   = collectPhotosFromPreview('exc-photo-prev-end');
@@ -4457,10 +4454,7 @@ function submitReport(type) {
     data.meters   = to > from ? (to - from) : parseFloat(document.getElementById('pipe-meters').value) || 0;
     data.size     = document.getElementById('pipe-size').value;
     data.material = document.getElementById('pipe-material').value;
-    data.lat      = parseFloat(document.getElementById('pipe-lat').value) || null;
-    data.lon      = parseFloat(document.getElementById('pipe-lon').value) || null;
-    data.lat2     = parseFloat(document.getElementById('pipe-lat2').value) || null;
-    data.lon2     = parseFloat(document.getElementById('pipe-lon2').value) || null;
+
     data.encasings    = collectEncasingEntries();
     // legacy compat: set single encasing from first entry
     const firstEnc    = data.encasings[0];
@@ -4553,10 +4547,7 @@ function submitReport(type) {
     data.pipeVol    = parseFloat(document.getElementById('ref-pipevol').value)  || null;
     data.netVol     = parseFloat(document.getElementById('ref-netvol').value)   || null;
     data.road       = document.getElementById('ref-road').value;
-    data.lat        = parseFloat(document.getElementById('ref-lat').value) || null;
-    data.lon        = parseFloat(document.getElementById('ref-lon').value) || null;
-    data.lat2       = parseFloat(document.getElementById('ref-lat2').value) || null;
-    data.lon2       = parseFloat(document.getElementById('ref-lon2').value) || null;
+
     data.remarks    = document.getElementById('ref-remarks').value;
 
     // ── Mandatory field validation (supervisors and PM) ──────────────────────
@@ -4622,8 +4613,6 @@ function submitReport(type) {
     data.valType  = firstV ? firstV.valType : '';
     data.size     = firstV ? firstV.size : '';
     data.depth    = firstV ? firstV.depth : null;
-    data.lat      = parseFloat(document.getElementById('val-lat').value) || null;
-    data.lon      = parseFloat(document.getElementById('val-lon').value) || null;
     data.chamberReq = document.getElementById('val-chamber-req').value || '—';
     data.remarks = document.getElementById('val-remarks').value;
     data.photos  = collectPhotosFromPreview('val-photo-prev');
@@ -4652,8 +4641,6 @@ function submitReport(type) {
     data.slab         = document.getElementById('cham-slab').value;
     data.slabInstalled = data.slab === 'Precast' ? document.getElementById('cham-slab-installed').value : null;
     data.slabKept      = data.slab === 'Precast' ? document.getElementById('cham-slab-kept').value : null;
-    data.lat       = parseFloat(document.getElementById('cham-lat').value) || null;
-    data.lon       = parseFloat(document.getElementById('cham-lon').value) || null;
     data.remarks   = document.getElementById('cham-remarks').value;
   } else if (type === 'structure') {
     // Hard check: must have pipe laying report with encasing/thrust block flagged
@@ -4686,8 +4673,6 @@ function submitReport(type) {
     data.volTrench = parseFloat(document.getElementById('str-vol-trench').value) || null;
     data.volPipe   = parseFloat(document.getElementById('str-vol-pipe').value)   || null;
     data.actualConc= parseFloat(document.getElementById('str-actual-conc').value) || null;
-    data.lat       = parseFloat(document.getElementById('str-lat').value) || null;
-    data.lon       = parseFloat(document.getElementById('str-lon').value) || null;
     data.remarks   = document.getElementById('str-remarks').value;
   } else if (type === 'fitting') {
     var fitType = document.getElementById('fit-type').value;
@@ -4715,8 +4700,6 @@ function submitReport(type) {
     }
     data.qty      = parseInt(document.getElementById('fit-qty').value) || 1;
     data.thrustBlock = document.getElementById('fit-thrust').value || '—';
-    data.lat      = parseFloat(document.getElementById('fit-lat').value) || null;
-    data.lon      = parseFloat(document.getElementById('fit-lon').value) || null;
     data.remarks  = document.getElementById('fit-remarks').value.trim();
     // collect photos
     const fitPrevs = document.querySelectorAll('#fit-photo-prev img');
