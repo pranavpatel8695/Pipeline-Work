@@ -1248,7 +1248,7 @@ async function fbSync() {
     // Also pull config
     await fbPullConfig();
 
-    // Remote is truth — deduplicate and save
+    // Remote is truth — deduplicate and keep local-only
     const blacklist = new Set(JSON.parse(localStorage.getItem('aquatrack_deleted') || '[]'));
     const deduped = Object.values(
       reports.reduce((m, r) => {
@@ -1256,7 +1256,14 @@ async function fbSync() {
         return m;
       }, {})
     );
-    localStorage.setItem('aquatrack_reports', JSON.stringify(deduped));
+    // Keep local-only reports not yet synced to Appwrite
+    const local = JSON.parse(localStorage.getItem('aquatrack_reports') || '[]');
+    const remoteIds = new Set(deduped.map(r => String(r.id)));
+    const localOnly = local.filter(r => r.id && !remoteIds.has(String(r.id)) && !blacklist.has(String(r.id)));
+    const finalReports = [...deduped, ...localOnly];
+    localStorage.setItem('aquatrack_reports', JSON.stringify(finalReports));
+    // Upload local-only reports to Appwrite
+    for (const r of localOnly) { try { await fbSaveReport(r); } catch(e) {} }
 
     // Don't overwrite projects if they exist locally
     const localProjects = JSON.parse(localStorage.getItem('aquatrack_projects') || '[]');
