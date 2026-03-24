@@ -1667,7 +1667,6 @@ console.log('Appwrite configured ✅');
           <label>Excavation Quantity (m³) <span style="color:var(--muted);font-size:11px">— auto calculated</span></label>
           <input type="number" id="exc-volume" placeholder="L × W × D" readonly style="opacity:0.7">
         </div>
-        <input type="hidden" id="exc-lat"><input type="hidden" id="exc-lon">
         <div class="field-group">
           <label>Starting Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 1</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('exc-photos-start').click()">
@@ -1677,7 +1676,6 @@ console.log('Appwrite configured ✅');
           </div>
           <div class="photo-previews" id="exc-photo-prev-start"></div>
         </div>
-        <input type="hidden" id="exc-lat2"><input type="hidden" id="exc-lon2">
         <div class="field-group">
           <label>Ending Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 1</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('exc-photos-end').click()">
@@ -1740,8 +1738,7 @@ console.log('Appwrite configured ✅');
           <input type="number" id="pipe-meters" placeholder="Auto-calculated" readonly style="opacity:0.7">
           <span id="pipe-meters-badge" style="display:none;font-size:11px;font-weight:700;color:#30D158;background:rgba(48,209,88,0.1);border:1px solid rgba(48,209,88,0.3);border-radius:6px;padding:3px 8px;margin-top:4px"></span>
         </div>
-<input type="hidden" id="pipe-lat"><input type="hidden" id="pipe-lon">
-        <div class="field-group">
+<div class="field-group">
           <label>Starting Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 1</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('pipe-photos-start').click()">
             <div class="pi-icon">📷</div><p>Tap to add photos</p>
@@ -1750,8 +1747,7 @@ console.log('Appwrite configured ✅');
           </div>
           <div class="photo-previews" id="pipe-photo-prev-start"></div>
         </div>
-<input type="hidden" id="pipe-lat2"><input type="hidden" id="pipe-lon2">
-        <div class="field-group">
+<div class="field-group">
           <label>Ending Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 1</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('pipe-photos-end').click()">
             <div class="pi-icon">📷</div><p>Tap to add photos</p>
@@ -1864,8 +1860,7 @@ console.log('Appwrite configured ✅');
             <option>In Progress</option><option>Completed</option>
           </select>
         </div>
-<input type="hidden" id="ref-lat"><input type="hidden" id="ref-lon">
-        <div class="field-group">
+<div class="field-group">
           <label>Starting Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 1</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('ref-photos-start').click()">
             <div class="pi-icon">📷</div><p>Tap to add photos</p>
@@ -1874,8 +1869,7 @@ console.log('Appwrite configured ✅');
           </div>
           <div class="photo-previews" id="ref-photo-prev-start"></div>
         </div>
-<input type="hidden" id="ref-lat2"><input type="hidden" id="ref-lon2">
-        <div class="field-group">
+<div class="field-group">
           <label>Ending Point Photos <span style="color:#FF453A">*</span> <span style="color:var(--muted);font-size:11px">— max 1</span></label>
           <div class="photo-input-wrap" onclick="document.getElementById('ref-photos-end').click()">
             <div class="pi-icon">📷</div><p>Tap to add photos</p>
@@ -1927,7 +1921,6 @@ console.log('Appwrite configured ✅');
           </button>
         </div>
 
-        <input type="hidden" id="val-lat"><input type="hidden" id="val-lon">
         <div class="field-group">
           <label>Photos</label>
           <div class="photo-input-wrap" onclick="document.getElementById('val-photos').click()">
@@ -2037,7 +2030,6 @@ console.log('Appwrite configured ✅');
             </div>
           </div>
         </div>
-        <input type="hidden" id="cham-lat"><input type="hidden" id="cham-lon">
         <div class="field-group">
           <label>Photos</label>
           <div class="photo-input-wrap" onclick="document.getElementById('cham-photos').click()">
@@ -2215,9 +2207,7 @@ console.log('Appwrite configured ✅');
             <div id="str-conc-diff" style="display:none;font-size:11px;font-weight:600;padding:7px 10px;background:var(--surface);border-radius:8px"></div>
           </div>
         </div>
-<input type="hidden" id="str-lat"><input type="hidden" id="str-lon">
-
-        <!-- Photos -->
+<!-- Photos -->
         <div class="field-group">
           <label>Photos</label>
           <div class="photo-input-wrap" onclick="document.getElementById('str-photos').click()">
@@ -2295,8 +2285,7 @@ console.log('Appwrite configured ✅');
           </div>
           <input type="hidden" id="fit-thrust" value="">
         </div>
-<input type="hidden" id="fit-lat"><input type="hidden" id="fit-lon">
-        <div class="field-group">
+<div class="field-group">
           <label>Photos</label>
           <div class="photo-input-wrap" onclick="document.getElementById('fit-photos').click()">
             <div class="pi-icon">📷</div>
@@ -4147,7 +4136,7 @@ function getGPS(latId, lonId) {
   }
 }
 
-// ========== GPS-STAMPED PHOTOS ==========
+// ========== PHOTOS ==========
 function previewPhotosGPS(input, previewId, latId, lonId) {
   const prev = typeof previewId === 'string' ? document.getElementById(previewId) : previewId;
   if (!prev) return;
@@ -4155,55 +4144,36 @@ function previewPhotosGPS(input, previewId, latId, lonId) {
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-IN', { day:'2-digit', month:'2-digit', year:'numeric' });
   const timeStr = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
-
-  // Auto-capture GPS silently when photo is taken
-  function doProcess(lat, lon) {
-    // Store in hidden fields
-    var latEl = document.getElementById(latId);
-    var lonEl = document.getElementById(lonId);
-    if (latEl && !latEl.value) latEl.value = lat;
-    if (lonEl && !lonEl.value) lonEl.value = lon;
-    Array.from(input.files).forEach(function(file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        compressToTargetSize(e.target.result, 50).then(function(compressed) {
-          const wrap = document.createElement('div');
-          wrap.className = 'photo-preview-wrap';
-          const img = document.createElement('img');
-          img.className = 'photo-preview';
-          img.src = compressed;
-          // Store lat/lon on img for collection
-          img.dataset.lat = lat;
-          img.dataset.lon = lon;
-          const kb = Math.round(compressed.length * 0.75 / 1024);
-          const tag = document.createElement('div');
-          tag.className = 'photo-gps-tag';
-          tag.innerHTML = (lat !== '—' ? '📍 ' + lat + ', ' + lon + '<br>' : '') +
-            '📅 ' + dateStr + ' ' + timeStr + '<br>📦 ' + kb + 'KB';
-          wrap.appendChild(img); wrap.appendChild(tag); prev.appendChild(wrap);
-        });
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      function(pos) { doProcess(pos.coords.latitude.toFixed(6), pos.coords.longitude.toFixed(6)); },
-      function()    { doProcess(lastGPS.lat || '—', lastGPS.lon || '—'); },
-      { timeout: 5000, maximumAge: 30000 }
-    );
-  } else {
-    doProcess(lastGPS.lat || '—', lastGPS.lon || '—');
-  }
+  Array.from(input.files).forEach(function(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      compressToTargetSize(e.target.result, 50).then(function(compressed) {
+        const wrap = document.createElement('div');
+        wrap.className = 'photo-preview-wrap';
+        const img = document.createElement('img');
+        img.className = 'photo-preview';
+        img.src = compressed;
+        const kb = Math.round(compressed.length * 0.75 / 1024);
+        const tag = document.createElement('div');
+        tag.className = 'photo-gps-tag';
+        tag.innerHTML = '📅 ' + dateStr + ' ' + timeStr + '<br>📦 ' + kb + 'KB';
+        const rm = document.createElement('button');
+        rm.innerHTML = '✕';
+        rm.className = 'photo-remove-btn';
+        rm.onclick = function() { wrap.remove(); };
+        wrap.appendChild(img); wrap.appendChild(tag); wrap.appendChild(rm);
+        prev.appendChild(wrap);
+      });
+    };
+    reader.readAsDataURL(file);
+  });
 }
-
 // Collect compressed photos (with embedded GPS) from preview div
 function collectPhotosFromPreview(previewId) {
   var prev = typeof previewId === 'string' ? document.getElementById(previewId) : previewId;
   if (!prev) return [];
   return Array.from(prev.querySelectorAll('img.photo-preview')).map(function(img) {
-    return { src: img.src, lat: img.dataset.lat||null, lon: img.dataset.lon||null };
+    return { src: img.src };
   }).filter(function(p){ return p.src; });
 }
 
