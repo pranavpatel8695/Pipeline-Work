@@ -1326,13 +1326,7 @@ async function fbPullConfig() {
       if (adminLocal) existing['admin'] = adminLocal; // never overwrite admin from Appwrite
       localStorage.setItem('aquatrack_users', JSON.stringify(existing));
     }
-    // Pull deleted IDs from Appwrite only (ignore stale local list)
-    try {
-      const dres = await awRequest('GET', `/databases/${AW_DATABASE}/collections/${AW_CONFIG_COL}/documents/deletedIds`);
-      if (dres?.value) {
-        localStorage.setItem('aquatrack_deleted', dres.value);
-      }
-    } catch(e) {}
+    // deletedIds removed - not needed
     // Also pull users from separate document
     try {
       const ures = await awRequest('GET', `/databases/${AW_DATABASE}/collections/${AW_CONFIG_COL}/documents/usersData`);
@@ -5357,14 +5351,7 @@ function deleteReport(id) {
       fbUpdateStatus('saving');
       fbDeleteReport(id).then(function(ok) {
         fbUpdateStatus(ok ? 'synced' : 'offline');
-        if (ok) {
-          // Only blacklist after confirmed Appwrite delete
-          const blacklist = JSON.parse(localStorage.getItem('aquatrack_deleted') || '[]');
-          if (!blacklist.includes(String(id))) blacklist.push(String(id));
-          localStorage.setItem('aquatrack_deleted', JSON.stringify(blacklist));
-          awRequest('PATCH', `/databases/${AW_DATABASE}/collections/${AW_CONFIG_COL}/documents/deletedIds`,
-            { data: { key: 'deletedIds', value: JSON.stringify(blacklist) } });
-        }
+        // delete confirmed in Appwrite
       });
     }
   );
@@ -8368,7 +8355,7 @@ function importBackupFromLogin(input) {
     }
   } catch(e) {}
 })();
-runMigrations(); seedDemoData(); populateAllProjectDropdowns();
+localStorage.removeItem('aquatrack_deleted'); runMigrations(); seedDemoData(); populateAllProjectDropdowns();
 </script>
 
   <!-- New Project Modal -->
