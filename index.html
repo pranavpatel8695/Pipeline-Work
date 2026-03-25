@@ -5360,20 +5360,17 @@ function deleteReport(id) {
       refreshMapPins();
       if (typeof renderTracker === 'function') renderTracker();
       showToast('🗑️ Deleted');
-      // Add to delete blacklist so fbSync won't restore it
-      const blacklist = JSON.parse(localStorage.getItem('aquatrack_deleted') || '[]');
-      if (!blacklist.includes(String(id))) blacklist.push(String(id));
-      localStorage.setItem('aquatrack_deleted', JSON.stringify(blacklist));
-      // Push blacklist to Appwrite so all devices respect it
-      awRequest('PATCH', `/databases/${AW_DATABASE}/collections/${AW_CONFIG_COL}/documents/deletedIds`,
-        { data: { key: 'deletedIds', value: JSON.stringify(blacklist) } }
-      ).then(r => { if (!r) awRequest('POST', `/databases/${AW_DATABASE}/collections/${AW_CONFIG_COL}/documents`,
-        { documentId: 'deletedIds', data: { key: 'deletedIds', value: JSON.stringify(blacklist) }, permissions: ['read("any")','update("any")','delete("any")'] }
-      ); });
       fbUpdateStatus('saving');
       fbDeleteReport(id).then(function(ok) {
         fbUpdateStatus(ok ? 'synced' : 'offline');
-        if (!ok) showToast('⚠️ Delete will sync when online');
+        if (ok) {
+          // Only blacklist after confirmed Appwrite delete
+          const blacklist = JSON.parse(localStorage.getItem('aquatrack_deleted') || '[]');
+          if (!blacklist.includes(String(id))) blacklist.push(String(id));
+          localStorage.setItem('aquatrack_deleted', JSON.stringify(blacklist));
+          awRequest('PATCH', `/databases/${AW_DATABASE}/collections/${AW_CONFIG_COL}/documents/deletedIds`,
+            { data: { key: 'deletedIds', value: JSON.stringify(blacklist) } });
+        }
       });
     }
   );
