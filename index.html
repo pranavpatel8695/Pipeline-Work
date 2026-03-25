@@ -1254,6 +1254,7 @@ async function fbSync() {
     reports.forEach(r => { if (r.id && !blacklist.has(String(r.id))) merged[String(r.id)] = r; });
 
     const finalReports = Object.values(merged);
+    console.log(`Sync: local=${local.length} remote=${reports.length} final=${finalReports.length} blacklist=${blacklist.size}`);
     localStorage.setItem('aquatrack_reports', JSON.stringify(finalReports));
 
     // Upload any local-only reports to Appwrite
@@ -2559,6 +2560,17 @@ const STORAGE_KEYS = [
 ];
 
 function runMigrations() {
+  // Fix string IDs starting with 'r' — convert to numeric
+  var _idFix = JSON.parse(localStorage.getItem('aquatrack_reports') || '[]');
+  var _idFixed = false;
+  _idFix.forEach(function(r) {
+    if (typeof r.id === 'string' && r.id.startsWith('r')) {
+      const num = parseInt(r.id.slice(1));
+      if (!isNaN(num)) { r.id = num; _idFixed = true; }
+    }
+  });
+  if (_idFixed) localStorage.setItem('aquatrack_reports', JSON.stringify(_idFix));
+
   // Migrate old 'Encasing Required' → 'CC Encasing Required'
   var _encMigRpts = JSON.parse(localStorage.getItem('aquatrack_reports') || '[]');
   var _encMigrated = false;
