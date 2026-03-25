@@ -1236,30 +1236,24 @@ async function fbSync() {
     // Pull config
     await fbPullConfig();
 
-    // MERGE: combine local + remote, never lose data
-    // Only exclude reports in the explicit delete list (from Appwrite deletedIds)
-    const deletedIds = new Set(JSON.parse(localStorage.getItem('aquatrack_deleted') || '[]'));
+    // MERGE: combine remote + local, never lose data
     const local = JSON.parse(localStorage.getItem('aquatrack_reports') || '[]');
 
-    // Build map from remote
+    // Build map starting with remote (source of truth)
     const merged = {};
-    remoteReports.forEach(r => {
-      if (r.id && !deletedIds.has(String(r.id))) merged[String(r.id)] = r;
-    });
-    // Add local reports not in remote (submitted offline or pending upload)
+    remoteReports.forEach(r => { if (r.id) merged[String(r.id)] = r; });
+    // Add local-only reports (submitted offline/pending upload)
     const remoteIds = new Set(remoteReports.map(r => String(r.id)));
     local.forEach(r => {
-      if (r.id && !deletedIds.has(String(r.id)) && !remoteIds.has(String(r.id))) {
-        merged[String(r.id)] = r;
-      }
+      if (r.id && !remoteIds.has(String(r.id))) merged[String(r.id)] = r;
     });
 
     const finalReports = Object.values(merged);
-    console.log(`Sync: local=${local.length} remote=${remoteReports.length} final=${finalReports.length} deleted=${deletedIds.size}`);
+    console.log(`Sync: local=${local.length} remote=${remoteReports.length} final=${finalReports.length}`);
     localStorage.setItem('aquatrack_reports', JSON.stringify(finalReports));
 
     // Upload local-only to Appwrite
-    const toUpload = local.filter(r => r.id && !remoteIds.has(String(r.id)) && !deletedIds.has(String(r.id)));
+    const toUpload = local.filter(r => r.id && !remoteIds.has(String(r.id)));
     for (const r of toUpload) { try { await fbSaveReport(r); } catch(e) {} }
 
     // Update projects from reports if empty
